@@ -9,9 +9,35 @@ import SwiftUI
 
 @main
 struct yangApp: App {
+    @State private var isLaunching = true
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if isLaunching {
+                LaunchScreenView()
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            withAnimation {
+                                isLaunching = false
+                            }
+                        }
+                    }
+            } else {
+                ContentView()
+            }
         }
+    }
+}
+
+struct LaunchScreenView: View {
+    var body: some View {
+        ZStack {
+            Color.black
+            Image("LaunchImage")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 200)
+        }
+        .ignoresSafeArea()
     }
 }
