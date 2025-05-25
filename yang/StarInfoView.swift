@@ -2,7 +2,7 @@ import SwiftUI
 
 struct StarInfoView: View {
     let index: Int
-    @Environment(\\.presentationMode) var presentationMode
+    @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
         VStack(spacing: 20) {
