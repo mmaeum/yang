@@ -23,7 +23,7 @@ struct yangApp: App {
                         }
                     }
             } else {
-                ContentView()
+                CameraView()
             }
         }
     }
@@ -32,7 +32,7 @@ struct yangApp: App {
 struct LaunchScreenView: View {
     var body: some View {
         ZStack {
-            Color.black
+            Color.black 
             Image("LaunchImage")
                 .resizable()
                 .scaledToFit()

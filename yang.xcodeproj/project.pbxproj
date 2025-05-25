@@ -29,9 +29,22 @@
 		60409F8B2DD9BC9F0080B071 /* yangUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = yangUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		60C56E072DE358B800CDAE90 /* Exceptions for "yang" folder in "yang" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 60409F732DD9BC9C0080B071 /* yang */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		60409F762DD9BC9C0080B071 /* yang */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				60C56E072DE358B800CDAE90 /* Exceptions for "yang" folder in "yang" target */,
+			);
 			path = yang;
 			sourceTree = "<group>";
 		};
@@ -397,6 +410,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = yang/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "카메라 접근 권한이 필요합니다";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -424,6 +439,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = yang/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "카메라 접근 권한이 필요합니다";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
