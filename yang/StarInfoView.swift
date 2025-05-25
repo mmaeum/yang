@@ -5,7 +5,8 @@ struct StarInfoView: View {
     @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
-        VStack(spacing: 20) {
+        NavigationView {
+            VStack(spacing: 20) {
             HStack {
                 Button(action: {
                     presentationMode.wrappedValue.dismiss()
@@ -22,14 +23,14 @@ struct StarInfoView: View {
                 .font(.title)
             Text("Hello World")
                 .font(.headline)
-            Button("Button") {
-                // 아무 기능 없음
+            NavigationLink(destination: VideoRecordingView()) {
+                Text("비디오 촬영")
             }
             .buttonStyle(.borderedProminent)
             Spacer()
+            }
+            .background(Color.black.opacity(0.8))
+            .foregroundColor(.white)
         }
-        .background(Color.black.opacity(0.8))
-        .foregroundColor(.white)
-        .edgesIgnoringSafeArea(.all)
     }
 }
