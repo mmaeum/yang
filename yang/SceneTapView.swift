@@ -1,10 +1,12 @@
 import SwiftUI
 import SceneKit
 import Photos
+import UIKit
 
 struct SceneTapView: UIViewRepresentable {
     let scene: SCNScene
     @Binding var stars: [Star]
+    @State private var isTransitioning = false
     
     func makeUIView(context: Context) -> SCNView {
         let scnView = SCNView(frame: .zero)
@@ -57,18 +59,21 @@ struct SceneTapView: UIViewRepresentable {
     }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(stars: $stars)
+        Coordinator(stars: $stars, isTransitioning: $isTransitioning)
     }
     
     class Coordinator: NSObject, UIGestureRecognizerDelegate {
         @Binding var stars: [Star]
+        @Binding var isTransitioning: Bool
         
-        init(stars: Binding<[Star]>) {
+        init(stars: Binding<[Star]>, isTransitioning: Binding<Bool>) {
             _stars = stars
+            _isTransitioning = isTransitioning
         }
         
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
             guard
+                !self.isTransitioning,
                 let scnView = gesture.view as? SCNView,
                 let hit = scnView.hitTest(gesture.location(in: scnView), options: nil).first,
                 hit.node.geometry is SCNSphere,
@@ -77,10 +82,37 @@ struct SceneTapView: UIViewRepresentable {
                 let root = scnView.window?.rootViewController
             else { return }
             
+            self.isTransitioning = true
+            
+            // 로딩 화면 표시
+            let loadingVC = UIHostingController(rootView: LoadingView())
+            loadingVC.view.backgroundColor = .clear
+            loadingVC.modalPresentationStyle = .overFullScreen
+            root.present(loadingVC, animated: false)
+            
             let infoView = StarInfoView(star: star)
             let vc = UIHostingController(rootView: infoView)
             vc.modalPresentationStyle = .fullScreen
-            root.present(vc, animated: true)
+            vc.modalTransitionStyle = .crossDissolve
+            
+            // 현재 표시된 모달 뷰가 있다면 닫고 새로운 뷰를 표시
+            if let presentedVC = root.presentedViewController {
+                presentedVC.dismiss(animated: false) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        root.present(vc, animated: true)
+                        // 로딩 화면 제거
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            self.isTransitioning = false
+                        }
+                    }
+                }
+            } else {
+                root.present(vc, animated: true)
+                // 로딩 화면 제거
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    self.isTransitioning = false
+                }
+            }
         }
         
         @objc func handlePinch(_ gesture: UIPinchGestureRecognizer) {

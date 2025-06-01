@@ -1,25 +1,34 @@
 import SwiftUI
 import AVKit
 import Photos
+import UIKit
 
 struct StarInfoView: View {
     let star: Star
     @Environment(\.presentationMode) var presentationMode
     @State private var player: AVPlayer?
     @State private var isLoading = true
+    @State private var isTransitioning = false
     
     var body: some View {
         HStack(spacing: 0) {
             // 왼쪽 패널
             VStack(alignment: .leading, spacing: 20) {
                 Button(action: {
-                    presentationMode.wrappedValue.dismiss()
+                    guard !isTransitioning else { return }
+                    isTransitioning = true
+                    player?.pause()
+                    player = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        presentationMode.wrappedValue.dismiss()
+                    }
                 }) {
                     Image(systemName: "chevron.left")
                         .font(.title2)
                     Text("뒤로가기")
                 }
                 .padding()
+                .disabled(isTransitioning)
                 
                 Spacer()
                 
@@ -40,6 +49,7 @@ struct StarInfoView: View {
                         .cornerRadius(10)
                 }
                 .padding(.horizontal)
+                .disabled(isTransitioning)
                 
                 Spacer()
             }
@@ -47,18 +57,29 @@ struct StarInfoView: View {
             .background(Color.black.opacity(0.8))
             
             // 오른쪽 패널 (비디오)
-            if isLoading {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .scaleEffect(1.5)
-            } else if let player = player {
-                VideoPlayer(player: player)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ZStack {
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle())
+                        .scaleEffect(1.5)
+                } else if let player = player {
+                    VideoPlayer(player: player)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                
+                if isTransitioning {
+                    Color.black.opacity(0.5)
+                        .edgesIgnoringSafeArea(.all)
+                }
             }
         }
         .foregroundColor(.white)
         .onAppear {
             loadVideo()
+        }
+        .onDisappear {
+            player?.pause()
+            player = nil
         }
     }
     
