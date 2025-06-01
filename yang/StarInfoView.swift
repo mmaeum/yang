@@ -9,46 +9,56 @@ struct StarInfoView: View {
     @State private var isLoading = true
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                HStack {
-                    Button(action: {
-                        presentationMode.wrappedValue.dismiss()
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .font(.title2)
-                        Text("뒤로가기")
-                    }
-                    .padding()
-                    Spacer()
+        HStack(spacing: 0) {
+            // 왼쪽 패널
+            VStack(alignment: .leading, spacing: 20) {
+                Button(action: {
+                    presentationMode.wrappedValue.dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.title2)
+                    Text("뒤로가기")
                 }
+                .padding()
                 
-                if isLoading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle())
-                        .scaleEffect(1.5)
-                } else if let player = player {
-                    VideoPlayer(player: player)
-                        .frame(height: 300)
-                        .cornerRadius(12)
-                        .padding()
-                }
+                Spacer()
                 
                 Text("Created: \(star.createdAt.formatted())")
                     .font(.headline)
+                    .padding(.horizontal)
                 
-                NavigationLink(destination: VideoRecordingView()) {
+                Button(action: {
+                    let videoRecordingView = VideoRecordingView()
+                    let hostingController = UIHostingController(rootView: videoRecordingView)
+                    UIApplication.shared.windows.first?.rootViewController?.present(hostingController, animated: true)
+                }) {
                     Text("비디오 촬영")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
                 }
-                .buttonStyle(.borderedProminent)
+                .padding(.horizontal)
                 
                 Spacer()
             }
+            .frame(width: 200)
             .background(Color.black.opacity(0.8))
-            .foregroundColor(.white)
-            .onAppear {
-                loadVideo()
+            
+            // 오른쪽 패널 (비디오)
+            if isLoading {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
+                    .scaleEffect(1.5)
+            } else if let player = player {
+                VideoPlayer(player: player)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
+        }
+        .foregroundColor(.white)
+        .onAppear {
+            loadVideo()
         }
     }
     
