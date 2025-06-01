@@ -23,7 +23,7 @@ struct yangApp: App {
                         }
                     }
             } else {
-                CameraView()
+                ContentView()
             }
         }
     }
