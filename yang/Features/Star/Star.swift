@@ -3,13 +3,13 @@ import SceneKit
 import Photos
 
 struct Star: Identifiable {
-    let id: UUID
+    let id: String
     let asset: PHAsset
     let position: SCNVector3
     let createdAt: Date
     
     init(asset: PHAsset, position: SCNVector3) {
-        self.id = UUID()
+        self.id = asset.localIdentifier
         self.asset = asset
         self.position = position
         self.createdAt = asset.creationDate ?? Date()
@@ -27,4 +27,4 @@ struct Star: Identifiable {
             }
         }
     }
-} 
+}

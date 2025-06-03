@@ -1,7 +1,6 @@
+// 3) StarInfoView.swift
 import SwiftUI
 import AVKit
-import Photos
-import UIKit
 
 struct StarInfoView: View {
     let star: Star
@@ -9,33 +8,31 @@ struct StarInfoView: View {
     @State private var player: AVPlayer?
     @State private var isLoading = true
     @State private var isTransitioning = false
-    
+
     var body: some View {
         HStack(spacing: 0) {
-            // 왼쪽 패널
             VStack(alignment: .leading, spacing: 20) {
                 Button(action: {
                     guard !isTransitioning else { return }
                     isTransitioning = true
                     player?.pause()
                     player = nil
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        presentationMode.wrappedValue.dismiss()
-                    }
+                    presentationMode.wrappedValue.dismiss()
                 }) {
-                    Image(systemName: "chevron.left")
-                        .font(.title2)
-                    Text("뒤로가기")
+                    HStack {
+                        Image(systemName: "chevron.left")
+                        Text("뒤로가기")
+                    }
                 }
                 .padding()
                 .disabled(isTransitioning)
-                
+
                 Spacer()
-                
+
                 Text("Created: \(star.createdAt.formatted())")
                     .font(.headline)
                     .padding(.horizontal)
-                
+
                 Button(action: {
                     let videoRecordingView = VideoRecordingView()
                     let hostingController = UIHostingController(rootView: videoRecordingView)
@@ -50,13 +47,12 @@ struct StarInfoView: View {
                 }
                 .padding(.horizontal)
                 .disabled(isTransitioning)
-                
+
                 Spacer()
             }
             .frame(width: 200)
             .background(Color.black.opacity(0.8))
-            
-            // 오른쪽 패널 (비디오)
+
             ZStack {
                 if isLoading {
                     ProgressView()
@@ -66,7 +62,7 @@ struct StarInfoView: View {
                     VideoPlayer(player: player)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                
+
                 if isTransitioning {
                     Color.black.opacity(0.5)
                         .edgesIgnoringSafeArea(.all)
@@ -75,20 +71,16 @@ struct StarInfoView: View {
         }
         .foregroundColor(.white)
         .onAppear {
-            loadVideo()
+            star.getVideoURL { url in
+                if let url = url {
+                    player = AVPlayer(url: url)
+                }
+                isLoading = false
+            }
         }
         .onDisappear {
             player?.pause()
             player = nil
-        }
-    }
-    
-    private func loadVideo() {
-        star.getVideoURL { url in
-            if let url = url {
-                player = AVPlayer(url: url)
-            }
-            isLoading = false
         }
     }
 }
