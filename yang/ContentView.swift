@@ -25,7 +25,7 @@ struct ContentView: View {
                     .progressViewStyle(CircularProgressViewStyle())
                     .scaleEffect(1.5)
             } else {
-                SceneTapView(scene: scene, stars: $stars)
+                StarListView(scene: scene, stars: $stars)
                     .edgesIgnoringSafeArea(.all)
             }
         }

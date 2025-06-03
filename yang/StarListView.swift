@@ -3,7 +3,7 @@ import SceneKit
 import Photos
 import UIKit
 
-struct SceneTapView: UIViewRepresentable {
+struct StarListView: UIViewRepresentable {
     let scene: SCNScene
     @Binding var stars: [Star]
     @State private var isTransitioning = false
