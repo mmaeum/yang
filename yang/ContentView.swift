@@ -83,17 +83,17 @@ struct ContentView: View {
         assets.enumerateObjects { asset, index, stop in
             if asset.mediaType == .video {
                 // 비디오의 고유 식별자를 시드값으로 사용
-                let seed = UInt64(asset.localIdentifier.hash)
+                let seed = UInt64(abs(asset.localIdentifier.hash))
                 var random = SeededRandomNumberGenerator(seed: seed)
                 
                 // 최신 비디오일수록 중앙에 가깝게 위치
-                let distance = Float(index) * 2.0  // 인덱스가 클수록(오래된 비디오일수록) 더 멀리
-                let angle = Float.random(in: 0...(2 * .pi), using: &random)  // 시드 기반 랜덤 각도
+                let distance = Float(index) * 2.0
+                let angle = Float.random(in: 0...(2 * .pi), using: &random)
                 
                 let position = SCNVector3(
-                    distance * cos(angle),  // x 좌표
-                    distance * sin(angle),  // y 좌표
-                    Float.random(in: -5...5, using: &random)  // z 좌표는 약간의 랜덤성 부여
+                    distance * cos(angle),
+                    distance * sin(angle),
+                    Float.random(in: -5...5, using: &random)
                 )
                 
                 let star = Star(asset: asset, position: position)
@@ -108,7 +108,6 @@ struct ContentView: View {
     }
 }
 
-// 시드 기반 랜덤 넘버 생성기
 struct SeededRandomNumberGenerator: RandomNumberGenerator {
     private var generator: UInt64
     
