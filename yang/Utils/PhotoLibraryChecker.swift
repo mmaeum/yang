@@ -25,12 +25,6 @@ class PhotoLibraryChecker {
     }
     
     private static func performVideoCheck(completion: @escaping (Bool) -> Void) {
-        // 오늘 날짜 범위 설정
-        let calendar = Calendar.current
-        let today = Date()
-        let startOfDay = calendar.startOfDay(for: today)
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
-        
         // 앨범에서 "yang" 폴더 찾기
         let albumFetchOptions = PHFetchOptions()
         albumFetchOptions.predicate = NSPredicate(format: "title = %@", "yang")
@@ -41,16 +35,15 @@ class PhotoLibraryChecker {
         if albums.count > 0 {
             let yangAlbum = albums.firstObject!
             
-            // yang 폴더에서 오늘 생성된 비디오 찾기
+            // yang 폴더에서 모든 비디오 찾기
             let videoFetchOptions = PHFetchOptions()
-            videoFetchOptions.predicate = NSPredicate(format: "mediaType = %d AND creationDate >= %@ AND creationDate < %@", 
-                                                    PHAssetMediaType.video.rawValue, startOfDay as NSDate, endOfDay as NSDate)
+            videoFetchOptions.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.video.rawValue)
             videoFetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
             
             let videos = PHAsset.fetchAssets(in: yangAlbum, options: videoFetchOptions)
             hasVideo = videos.count > 0
             
-            print("yang 폴더에서 오늘 찍은 비디오 개수: \(videos.count)")
+            print("yang 폴더의 전체 비디오 개수: \(videos.count)")
         } else {
             print("yang 폴더를 찾을 수 없습니다.")
         }
