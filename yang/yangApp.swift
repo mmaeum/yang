@@ -34,7 +34,7 @@ struct RootView: View {
         if appState.isLaunching {
             LaunchScreenView()
                 .onAppear {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
                         withAnimation {
                             appState.isLaunching = false
                             checkTodayVideos()
@@ -67,7 +67,7 @@ struct RootView: View {
 }
 
 struct LaunchScreenView: View {
-    private let riveModel = RiveViewModel(fileName: "launch_animation")
+    private let riveModel = RiveViewModel(fileName: "launch_animation", animationName: "Timeline 1")
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
