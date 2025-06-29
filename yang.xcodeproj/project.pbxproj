@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		60A10F892E116EFA00B3AAEF /* launch_animation.riv in Resources */ = {isa = PBXBuildFile; fileRef = 60A10F882E116EFA00B3AAEF /* launch_animation.riv */; };
+		60A10F8D2E116F4E00B3AAEF /* RiveRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 60A10F8C2E116F4E00B3AAEF /* RiveRuntime */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		60409F822DD9BC9F0080B071 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +32,7 @@
 		60409F742DD9BC9C0080B071 /* yang.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = yang.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		60409F812DD9BC9F0080B071 /* yangTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = yangTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		60409F8B2DD9BC9F0080B071 /* yangUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = yangUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		60A10F882E116EFA00B3AAEF /* launch_animation.riv */ = {isa = PBXFileReference; lastKnownFileType = file; path = launch_animation.riv; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -65,6 +71,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				60A10F8D2E116F4E00B3AAEF /* RiveRuntime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -88,9 +95,11 @@
 		60409F6B2DD9BC9C0080B071 = {
 			isa = PBXGroup;
 			children = (
+				60A10F882E116EFA00B3AAEF /* launch_animation.riv */,
 				60409F762DD9BC9C0080B071 /* yang */,
 				60409F842DD9BC9F0080B071 /* yangTests */,
 				60409F8E2DD9BC9F0080B071 /* yangUITests */,
+				60A10F8B2E116F4E00B3AAEF /* Frameworks */,
 				60409F752DD9BC9C0080B071 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -103,6 +112,13 @@
 				60409F8B2DD9BC9F0080B071 /* yangUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		60A10F8B2E116F4E00B3AAEF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -125,6 +141,7 @@
 			);
 			name = yang;
 			packageProductDependencies = (
+				60A10F8C2E116F4E00B3AAEF /* RiveRuntime */,
 			);
 			productName = yang;
 			productReference = 60409F742DD9BC9C0080B071 /* yang.app */;
@@ -208,6 +225,9 @@
 			);
 			mainGroup = 60409F6B2DD9BC9C0080B071;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				60A10F8A2E116F1000B3AAEF /* XCRemoteSwiftPackageReference "rive-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 60409F752DD9BC9C0080B071 /* Products */;
 			projectDirPath = "";
@@ -225,6 +245,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				60A10F892E116EFA00B3AAEF /* launch_animation.riv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -575,6 +596,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		60A10F8A2E116F1000B3AAEF /* XCRemoteSwiftPackageReference "rive-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/rive-app/rive-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.9.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		60A10F8C2E116F4E00B3AAEF /* RiveRuntime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 60A10F8A2E116F1000B3AAEF /* XCRemoteSwiftPackageReference "rive-ios" */;
+			productName = RiveRuntime;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 60409F6C2DD9BC9C0080B071 /* Project object */;
 }

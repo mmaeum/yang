@@ -6,59 +6,74 @@
 //
 
 import SwiftUI
+import AVKit
+import RiveRuntime
+
+class AppState: ObservableObject {
+    @Published var isLaunching = true
+    @Published var hasTodayVideo = false
+    @Published var isCheckingPhotos = true
+}
 
 @main
 struct yangApp: App {
-    @State private var isLaunching = true
-    @State private var hasTodayVideo = false
-    @State private var isCheckingPhotos = true
+    @StateObject private var appState = AppState()
     
     var body: some Scene {
         WindowGroup {
-            if isLaunching {
-                LaunchScreenView()
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                            withAnimation {
-                                isLaunching = false
-                                checkTodayVideos()
-                            }
+            RootView()
+                .environmentObject(appState)
+        }
+    }
+}
+
+struct RootView: View {
+    @EnvironmentObject var appState: AppState
+    
+    var body: some View {
+        if appState.isLaunching {
+            LaunchScreenView()
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                        withAnimation {
+                            appState.isLaunching = false
+                            checkTodayVideos()
                         }
                     }
-            } else if isCheckingPhotos {
-                LoadingView()
-            } else {
-                if hasTodayVideo {
-                    ContentView()
-                } else {
-                    VideoRecordingView(onVideoSaved: {
-                        self.hasTodayVideo = true
-                    })
                 }
+        } else if appState.isCheckingPhotos {
+            LoadingView()
+        } else {
+            if appState.hasTodayVideo {
+                ContentView()
+            } else {
+                VideoRecordingView(onVideoSaved: {
+                    appState.hasTodayVideo = true
+                })
             }
         }
     }
     
     private func checkTodayVideos() {
         PhotoLibraryChecker.checkForTodayVideosInYangFolder { hasVideos in
+            print("checkTodayVideos completion: hasVideos=\(hasVideos)")
             DispatchQueue.main.async {
-                self.hasTodayVideo = hasVideos
-                self.isCheckingPhotos = false
+                print("set hasTodayVideo, isCheckingPhotos = false")
+                appState.hasTodayVideo = hasVideos
+                appState.isCheckingPhotos = false
             }
         }
     }
 }
 
 struct LaunchScreenView: View {
+    private let riveModel = RiveViewModel(fileName: "launch_animation")
     var body: some View {
         ZStack {
-            Color.black 
-            Image("LaunchImage")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 200)
+            Color.black.ignoresSafeArea()
+            riveModel.view()
+                .frame(width: 300, height: 300)
         }
-        .ignoresSafeArea()
     }
 }
 
