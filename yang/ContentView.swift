@@ -19,120 +19,139 @@ struct ContentView: View {
     }()
     
     var body: some View {
-        ZStack {
-            Group {
-                Ellipse()
-                    .foregroundColor(.clear)
-                    .frame(width: 967, height: 967)
-                    .offset(x: 0, y: 0.50)
-                ZStack {
-                    if isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(1.5)
-                    } else {
-                        StarListView(scene: scene, stars: $stars)
-                            .frame(width: 393, height: 393)
-                            .cornerRadius(100)
-                    }
-                }
-                .frame(width: 393, height: 393)
-                .cornerRadius(100)
-                .offset(x: 0, y: 16.50)
-                VStack(alignment: .leading, spacing: nil) {
-                    HStack(spacing: 134) {
-                        HStack(spacing: 10) {
-                            Text("9:41")
-                                .font(Font.custom("SF Pro", size: 17).weight(.regular))
-                                .lineSpacing(22)
-                                .foregroundColor(.white)
-                        }
-                        .padding(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 6))
-                        Rectangle()
-                            .foregroundColor(.clear)
-                            .frame(width: 124, height: 10)
-                        HStack(spacing: 7) {
-                            Rectangle()
-                                .foregroundColor(.clear)
-                                .frame(width: 25, height: 13)
-                                .cornerRadius(4.30)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 4.30)
-                                        .inset(by: 0.50)
-                                        .stroke(.white, lineWidth: 0.50)
-                                )
-                            Rectangle()
-                                .foregroundColor(.clear)
-                                .frame(width: 21, height: 9)
-                                .background(.white)
-                                .cornerRadius(2.50)
-                        }
-                        .padding(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 16))
-                    }
-                }
-                .padding(EdgeInsets(top: 21, leading: 0, bottom: 0, trailing: 0))
-                .frame(width: 393, height: 50)
-                .offset(x: 0, y: -401)
-                ZStack {
-                    Text("YANG")
-                        .font(Font.custom("Press Start 2P", size: 12))
-                        .foregroundColor(.white)
-                        .shadow(color: Color(red: 0.00, green: 0.00, blue: 0.00, opacity: 0.16), radius: 20, x: 0, y: 0)
-                        .offset(x: 0, y: 0)
-                    HStack(spacing: 10) {
-                        ZStack {
-
-                        }
-                        .frame(width: 12, height: 12)
-                    }
-                    .frame(width: 52, height: 52)
-                    .background(Color(red: 0, green: 0, blue: 0).opacity(0.40))
-                    .cornerRadius(100)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 100)
-                            .inset(by: 0.25)
-                            .stroke(
-                                Color(red: 1, green: 1, blue: 1).opacity(0.30), lineWidth: 0.25
-                            )
-                    )
-                    .offset(x: 142.50, y: 0)
-                }
-                .frame(width: 393, height: 84)
-                .offset(x: 0, y: -334)
-                VStack(alignment: .leading, spacing: nil) {
+        GeometryReader { geometry in
+            ZStack {
+                Group {
+                    Ellipse()
+                        .foregroundColor(.clear)
+                        .frame(width: 967, height: 967)
+                        .offset(x: 0, y: 0.50)
                     ZStack {
-                        Rectangle()
-                            .foregroundColor(.clear)
-                            .frame(width: 144, height: 5)
-                            .background(.white)
-                            .cornerRadius(100)
-                            .offset(x: 144.50, y: 11.50)
+                        if isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(1.5)
+                        } else {
+                            StarListView(scene: scene, stars: $stars)
+                                .frame(width: 393, height: 393)
+                                .cornerRadius(100)
+                        }
                     }
-                    .frame(height: 34)
+                    .frame(width: 393, height: 393)
+                    .cornerRadius(100)
+                    .offset(x: 0, y: 16.50)
+                    VStack(alignment: .leading, spacing: nil) {
+                        HStack(spacing: 134) {
+                            HStack(spacing: 10) {
+                                Text("9:41")
+                                    .font(Font.custom("SF Pro", size: 17).weight(.regular))
+                                    .lineSpacing(22)
+                                    .foregroundColor(.white)
+                            }
+                            .padding(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 6))
+                            Rectangle()
+                                .foregroundColor(.clear)
+                                .frame(width: 124, height: 10)
+                            HStack(spacing: 7) {
+                                Rectangle()
+                                    .foregroundColor(.clear)
+                                    .frame(width: 25, height: 13)
+                                    .cornerRadius(4.30)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 4.30)
+                                            .inset(by: 0.50)
+                                            .stroke(.white, lineWidth: 0.50)
+                                    )
+                                Rectangle()
+                                    .foregroundColor(.clear)
+                                    .frame(width: 21, height: 9)
+                                    .background(.white)
+                                    .cornerRadius(2.50)
+                            }
+                            .padding(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 16))
+                        }
+                    }
+                    .padding(EdgeInsets(top: 21, leading: 0, bottom: 0, trailing: 0))
+                    .frame(width: 393, height: 50)
+                    .offset(x: 0, y: -401)
+                    ZStack {
+                        Text("YANG")
+                            .font(Font.custom("Press Start 2P", size: 16))
+                            .foregroundColor(.white)
+                            .shadow(color: Color(red: 0.00, green: 0.00, blue: 0.00, opacity: 0.16), radius: 20, x: 0, y: 0)
+                            .offset(x: 0, y: 0) // 가운데 정렬
+                        
+                        Button(action: {
+                            // 메뉴 액션 추가 예정
+                        }) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.black.opacity(0.40))
+                                    .frame(width: 40, height: 40)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Color.white.opacity(0.30), lineWidth: 0.25)
+                                    )
+                                
+                                VStack(spacing: 3) {
+                                    Rectangle()
+                                        .fill(Color.white)
+                                        .frame(width: 20, height: 2)
+                                    Rectangle()
+                                        .fill(Color.white)
+                                        .frame(width: 20, height: 2)
+                                    Rectangle()
+                                        .fill(Color.white)
+                                        .frame(width: 20, height: 2)
+                                }
+                            }
+                        }
+                        .offset(x: geometry.size.width * 0.36, y: 0)
+                    }
+                    .frame(width: geometry.size.width, height: geometry.size.height * 0.11)
+                    .offset(x: 0, y: -geometry.size.height * 0.38)
+                    VStack(alignment: .leading, spacing: nil) {
+                        ZStack {
+                            Rectangle()
+                                .foregroundColor(.clear)
+                                .frame(width: 144, height: 5)
+                                .background(.white)
+                                .cornerRadius(100)
+                                .offset(x: 144.50, y: 11.50)
+                        }
+                        .frame(height: 34)
+                    }
+                    .frame(width: 393)
+                    .offset(x: 0, y: 409)
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: geometry.size.height * 0.15)
+                        Text("Memory Bank")
+                            .font(Font.custom("Share Tech Mono", size: 28))
+                            .foregroundColor(.white)
+                        Text("Memories are not just about the past.\nThey shape who we are")
+                            .font(Font.custom("Share Tech Mono", size: 14))
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                        Spacer()
+                    }
+                    .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
+                    VStack {
+                        Spacer()
+                        Text("23:08:30")
+                            .font(Font.custom("Press Start 2P", size: 16))
+                            .foregroundColor(Color(red: 1, green: 0.51, blue: 0.03))
+                        Text("left for the next memory")
+                            .font(Font.custom("Share Tech Mono", size: 12))
+                            .foregroundColor(.white)
+                    }
+                    .frame(width: geometry.size.width, height: geometry.size.height, alignment: .bottom)
+                    .padding(.bottom, geometry.size.height * 0.3)
                 }
-                .frame(width: 393)
-                .offset(x: 0, y: 409)
-                Text("Memories are not just about the past.\nThey shape who we are")
-                    .font(Font.custom("Share Tech Mono", size: 14))
-                    .foregroundColor(.white)
-                    .offset(x: 0, y: -216)
-                Text("left for the next memory")
-                    .font(Font.custom("Share Tech Mono", size: 12))
-                    .foregroundColor(.white)
-                    .offset(x: 0, y: 307)
-                Text("Memory Bank")
-                    .font(Font.custom("Share Tech Mono", size: 28))
-                    .lineSpacing(28)
-                    .foregroundColor(.white)
-                    .offset(x: 0, y: -258)
-                Text("23:08:30")
-                    .font(Font.custom("Press Start 2P", size: 16))
-                    .foregroundColor(Color(red: 1, green: 0.51, blue: 0.03))
-                    .offset(x: 0, y: 285)
             }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .background(.black)
         }
         .frame(width: 393, height: 852)
-        .background(.black)
         .onAppear {
             loadVideos()
         }
