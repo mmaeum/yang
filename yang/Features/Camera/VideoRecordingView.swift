@@ -14,86 +14,58 @@ struct VideoRecordingView: View {
     
     var body: some View {
         ZStack {
-            // 검은색 배경
-            Color.black
-                .ignoresSafeArea()
+            Color.black.ignoresSafeArea()
             
             VStack {
-                Spacer()
-                
-                // 카메라 프리뷰 (작은 사각형)
-                CameraPreviewView(session: viewModel.session)
-                    .frame(width: 200, height: 300)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                    )
-                
-                Spacer()
-                
-                // 안내 텍스트
-                VStack(spacing: 8) {
-                    Text("Align scene on")
-                        .font(.title2)
-                        .fontWeight(.medium)
+                Spacer().frame(height: 60)
+                // 상단 안내 텍스트
+                VStack(spacing: 16) {
+                    Text("Would you like to\ncapture this moment\nin your memory?")
+                        .font(.system(size: 20, weight: .regular, design: .monospaced))
                         .foregroundColor(.white)
-                    
-                    Text("the middle of the grid")
-                        .font(.title2)
-                        .fontWeight(.medium)
-                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                    Text("Just one memory can be stored every day.")
+                        .font(.system(size: 12, weight: .regular, design: .monospaced))
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
                 }
                 .padding(.bottom, 40)
-                
-                // 촬영 제한 메시지
-                Text("Only 1 shot per day")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .padding(.bottom, 20)
-                
-                // 촬영 컨트롤 버튼들
-                HStack(spacing: 60) {    
-                    // 촬영 버튼
-                    Button(action: {
-                        if viewModel.isRecording {
-                            viewModel.stopRecording()
-                        } else {
-                            viewModel.startRecording()
-                        }
-                    }) {
-                        ZStack {
-                            // 진행 상황 원형 바 (배경)
-                            Circle()
-                                .stroke(Color.gray.opacity(0.3), lineWidth: 4)
-                                .frame(width: 100, height: 100)
-                            
-                            // 진행 상황 원형 바 (진행률)
-                            if viewModel.isRecording {
-                                Circle()
-                                    .trim(from: 0, to: CGFloat(1.0 - (viewModel.recordingTimeRemaining / 3.0)))
-                                    .stroke(Color.red, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                                    .frame(width: 100, height: 100)
-                                    .rotationEffect(.degrees(-90))
-                                    .animation(.linear(duration: 0.1), value: viewModel.recordingTimeRemaining)
-                            }
-                            
-                            // 촬영 버튼
-                            Circle()
-                                .fill(viewModel.isRecording ? Color.red : Color.white)
-                                .frame(width: 80, height: 80)
-                            
-                            if viewModel.isRecording {
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(Color.white)
-                                    .frame(width: 30, height: 30)
-                            }
-                            
-                        }
-                    }
-                    
+                Spacer()
+                // 중앙 카메라 프리뷰 + 십자선
+                ZStack {
+                    CrosshairView()
+                    CameraPreviewView(session: viewModel.session)
+                        .frame(width: 100, height: 190)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.white.opacity(0.5), lineWidth: 2)
+                        )
                 }
-                .padding(.bottom, 30)
+                .frame(maxWidth: .infinity, maxHeight: 360)
+                Spacer()
+                // 하단 촬영 버튼
+                Button(action: {
+                    if viewModel.isRecording {
+                        viewModel.stopRecording()
+                    } else {
+                        viewModel.startRecording()
+                    }
+                }) {
+                    ZStack {
+                        Circle()
+                            .stroke(Color.white, lineWidth: 6)
+                            .frame(width: 100, height: 100)
+                        Circle()
+                            .stroke(Color.black, lineWidth: 2)
+                            .frame(width: 88, height: 88)
+                        Circle()
+                            .fill(viewModel.isRecording ? Color.red : Color.white)
+                            .frame(width: 80, height: 80)
+                    }
+                }
+                .padding(.bottom, 60)
             }
         }
         .onAppear {
@@ -106,12 +78,33 @@ struct VideoRecordingView: View {
     }
 }
 
+// 십자선 뷰
+struct CrosshairView: View {
+    var body: some View {
+        GeometryReader { geometry in
+            let width = geometry.size.width
+            let height = geometry.size.height
+            Path { path in
+                // 세로선
+                path.move(to: CGPoint(x: width/2, y: 0))
+                path.addLine(to: CGPoint(x: width/2, y: height))
+                // 가로선
+                path.move(to: CGPoint(x: 0, y: height/2))
+                path.addLine(to: CGPoint(x: width, y: height/2))
+            }
+            .stroke(style: StrokeStyle(lineWidth: 1, dash: [6, 6]))
+            .foregroundColor(Color.white.opacity(0.5))
+        }
+        .allowsHitTesting(false)
+    }
+}
+
 struct CameraPreviewView: UIViewRepresentable {
     let session: AVCaptureSession
     
     func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        view.backgroundColor = UIColor.black
+        let view: UIView = UIView()
+        view.backgroundColor = UIColor.yellow
         
         let previewLayer = AVCaptureVideoPreviewLayer(session: session)
         previewLayer.videoGravity = .resizeAspectFill
