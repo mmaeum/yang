@@ -5,6 +5,7 @@ import Photos
 struct ContentView: View {
     @State private var stars: [Star] = []
     @State private var isLoading = true
+    @State private var timeLeft: String = ""
     
     private let scene: SCNScene = {
         let scene = SCNScene()
@@ -21,98 +22,80 @@ struct ContentView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                Group {
-                    Ellipse()
-                        .foregroundColor(.clear)
-                        .frame(width: 967, height: 967)
-                        .offset(x: 0, y: 0.50)
-                    ZStack {
-                        if isLoading {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(1.5)
-                        } else {
-                            StarListView(scene: scene, stars: $stars)
-                                .frame(width: 393, height: 393)
-                                .cornerRadius(100)
-                        }
+                // Group 제거, 내부 View들을 직접 나열
+                Ellipse()
+                    .foregroundColor(.clear)
+                    .frame(width: 967, height: 967)
+                    .offset(x: 0, y: 0.50)
+                ZStack {
+                    if isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.5)
+                    } else {
+                        StarListView(scene: scene, stars: $stars)
+                            .frame(width: 393, height: 393)
+                            .cornerRadius(100)
                     }
-                    .frame(width: 393, height: 393)
-                    .cornerRadius(100)
-                    .offset(x: 0, y: 16.50)
-                    ZStack {
-                        Text("YANG")
-                            .font(Font.custom("PressStart2P-Regular", size: 16))
-                            .foregroundColor(.white)
-                            .shadow(color: Color(red: 0.00, green: 0.00, blue: 0.00, opacity: 0.16), radius: 20, x: 0, y: 0)
-                            .offset(x: 0, y: 0) // 가운데 정렬
-                        
-                        Button(action: {
-                            // 메뉴 액션 추가 예정
-                        }) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.black.opacity(0.40))
-                                    .frame(width: 40, height: 40)
-                                    .overlay(
-                                        Circle()
-                                            .stroke(Color.white.opacity(0.30), lineWidth: 0.25)
-                                    )
-                                
-                                VStack(spacing: 3) {
-                                    Rectangle()
-                                        .fill(Color.white)
-                                        .frame(width: 20, height: 2)
-                                    Rectangle()
-                                        .fill(Color.white)
-                                        .frame(width: 20, height: 2)
-                                    Rectangle()
-                                        .fill(Color.white)
-                                        .frame(width: 20, height: 2)
-                                }
+                }
+                .frame(width: 393, height: 393)
+                .cornerRadius(100)
+                .offset(x: 0, y: 16.50)
+                HStack(alignment: .center, spacing: 0) {
+                    Spacer()
+                    Button(action: {
+                        // 메뉴 액션 추가 예정
+                    }) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.black.opacity(0.40))
+                                .frame(width: 40, height: 40)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.white.opacity(0.30), lineWidth: 0.25)
+                                )
+                            VStack(spacing: 3) {
+                                Rectangle()
+                                    .fill(Color.white)
+                                    .frame(width: 20, height: 2)
+                                Rectangle()
+                                    .fill(Color.white)
+                                    .frame(width: 20, height: 2)
+                                Rectangle()
+                                    .fill(Color.white)
+                                    .frame(width: 20, height: 2)
                             }
                         }
-                        .offset(x: geometry.size.width * 0.36, y: 0)
                     }
-                    .frame(width: geometry.size.width, height: geometry.size.height * 0.11)
-                    .offset(x: 0, y: -geometry.size.height * 0.38)
-                    VStack(alignment: .leading, spacing: nil) {
-                        ZStack {
-                            Rectangle()
-                                .foregroundColor(.clear)
-                                .frame(width: 144, height: 5)
-                                .background(.white)
-                                .cornerRadius(100)
-                                .offset(x: 144.50, y: 11.50)
-                        }
-                        .frame(height: 34)
-                    }
-                    .frame(width: 393)
-                    .offset(x: 0, y: 409)
-                    VStack(spacing: 0) {
-                        Spacer().frame(height: geometry.size.height * 0.15)
-                        Text("Memory Bank")
-                            .font(Font.custom("ShareTechMono-Regular", size: 28))
-                            .foregroundColor(.white)
-                        Text("Memories are not just about the past.\nThey shape who we are")
-                            .font(Font.custom("ShareTechMono-Regular", size: 14))
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                        Spacer()
-                    }
-                    .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
-                    VStack {
-                        Spacer()
-                        Text("23:08:30")
-                            .font(Font.custom("PressStart2P-Regular", size: 16))
-                            .foregroundColor(Color(red: 1, green: 0.51, blue: 0.03))
-                        Text("left for the next memory")
-                            .font(Font.custom("ShareTechMono-Regular", size: 12))
-                            .foregroundColor(.white)
-                    }
-                    .frame(width: geometry.size.width, height: geometry.size.height, alignment: .bottom)
-                    .padding(.bottom, geometry.size.height * 0.3)
                 }
+                .padding(.leading, 333)
+                .padding(.trailing, 16)
+                .padding(.vertical, 20)
+                .frame(width: 393, height: 84, alignment: .trailing)
+                .offset(x: 0, y: -geometry.size.height * 0.38)
+                VStack(spacing: 0) {
+                    Spacer().frame(height: geometry.size.height * 0.15)
+                    Text("Memory Bank")
+                        .font(Font.custom("ShareTechMono-Regular", size: 28))
+                        .foregroundColor(.white)
+                    Text("Memories are not just about the past.\nThey shape who we are")
+                        .font(Font.custom("ShareTechMono-Regular", size: 14))
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                    Spacer()
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
+                VStack {
+                    Spacer()
+                    Text(timeLeft)
+                        .font(Font.custom("PressStart2P-Regular", size: 16))
+                        .foregroundColor(Color(red: 1, green: 0.51, blue: 0.03))
+                    Text("left for the next memory")
+                        .font(Font.custom("ShareTechMono-Regular", size: 12))
+                        .foregroundColor(.white)
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .bottom)
+                .padding(.bottom, geometry.size.height * 0.3)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
             .background(.black)
@@ -120,6 +103,10 @@ struct ContentView: View {
         .frame(width: 393, height: 852)
         .onAppear {
             loadVideos()
+            updateTimeLeft()
+            Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+                updateTimeLeft()
+            }
         }
     }
     
@@ -194,6 +181,17 @@ struct ContentView: View {
             stars = newStars
             isLoading = false
         }
+    }
+    
+    private func updateTimeLeft() {
+        let now = Date()
+        let calendar = Calendar.current
+        let tomorrow = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: now)!)
+        let diff = Int(tomorrow.timeIntervalSince(now))
+        let hours = diff / 3600
+        let minutes = (diff % 3600) / 60
+        let seconds = diff % 60
+        timeLeft = String(format: "%02d:%02d:%02d", hours, minutes, seconds)
     }
 }
 
