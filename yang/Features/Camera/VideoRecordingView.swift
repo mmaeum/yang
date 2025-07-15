@@ -18,51 +18,15 @@ struct VideoRecordingView: View {
             
             VStack {
                 Spacer().frame(height: 60)
-                // 상단 안내 텍스트
-                VStack(spacing: 16) {
-                    Text("Would you like to\ncapture this moment\nin your memory?")
-                        .font(.system(size: 20, weight: .regular, design: .monospaced))
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                    Text("Just one memory can be stored every day.")
-                        .font(.system(size: 12, weight: .regular, design: .monospaced))
-                        .foregroundColor(.gray)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                }
-                .padding(.bottom, 40)
+                HeaderSection()
                 Spacer()
-                // 중앙 카메라 프리뷰 + 십자선
-                ZStack {
-                    CrosshairView()
-                    CameraPreviewView(session: viewModel.session)
-                        .frame(width: 100, height: 190)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.white.opacity(0.5), lineWidth: 2)
-                        )
-                }
-                .frame(maxWidth: .infinity, maxHeight: 360)
+                CameraSection(session: viewModel.session)
                 Spacer()
-                // 하단 촬영 버튼
-                Button(action: {
+                RecordingButton(isRecording: viewModel.isRecording) {
                     if viewModel.isRecording {
                         viewModel.stopRecording()
                     } else {
                         viewModel.startRecording()
-                    }
-                }) {
-                    ZStack {
-                        Circle()
-                            .stroke(Color.white, lineWidth: 6)
-                            .frame(width: 100, height: 100)
-                        Circle()
-                            .stroke(Color.black, lineWidth: 2)
-                            .frame(width: 88, height: 88)
-                        Circle()
-                            .fill(viewModel.isRecording ? Color.red : Color.white)
-                            .frame(width: 80, height: 80)
                     }
                 }
                 .padding(.bottom, 60)
@@ -78,22 +42,170 @@ struct VideoRecordingView: View {
     }
 }
 
-// 십자선 뷰
+struct HeaderSection: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Would you like to\ncapture this moment\nin your memory?")
+                .font(.system(size: 20, weight: .regular, design: .monospaced))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+            Text("Just one memory can be stored every day.")
+                .font(.system(size: 12, weight: .regular, design: .monospaced))
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+        }
+        .padding(.bottom, 40)
+    }
+}
+
+struct CameraSection: View {
+    let session: AVCaptureSession
+    
+    var body: some View {
+        ZStack {
+            CameraPreviewView(session: session)
+                .frame(width: 90, height: 160)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.white.opacity(0.5), lineWidth: 2)
+                )
+            CrosshairView()
+        }
+        .frame(maxWidth: .infinity, maxHeight: 360)
+    }
+}
+
+struct RecordingButton: View {
+    let isRecording: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            if isRecording {
+                RecordingActiveView()
+            } else {
+                RecordingInactiveView()
+            }
+        }
+    }
+}
+
+struct RecordingInactiveView: View {
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(Color.white, lineWidth: 4)
+                .frame(width: 90, height: 90)
+            Circle()
+                .stroke(Color.black, lineWidth: 4)
+                .frame(width: 78, height: 78)
+            Circle()
+                .fill(Color.white)
+                .frame(width: 70, height: 70)
+        }
+    }
+}
+
+struct RecordingActiveView: View {
+    @State private var progress: CGFloat = 0.0
+    @State private var timeRemaining: Double = 3.0
+    
+    var body: some View {
+        ZStack {
+            // 배경 원 (연한 색)
+            Circle()
+                .stroke(Color.white.opacity(0.3), lineWidth: 4)
+                .frame(width: 90, height: 90)
+            
+            // Progress 원 (빨간색)
+            Circle()
+                .trim(from: 0.0, to: progress)
+                .stroke(Color.red, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .frame(width: 90, height: 90)
+                .rotationEffect(.degrees(-90))
+            
+            // 내부 원과 타이머 텍스트
+            ZStack {
+                Circle()
+                    .fill(Color(red: 1.0, green: 0.0, blue: 0.4)) // FF0066
+                    .frame(width: 70, height: 70)
+                
+                Text(String(format: "%.2f", timeRemaining))
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white)
+            }
+        }
+        .onAppear {
+            withAnimation(.linear(duration: 3.0)) {
+                progress = 1.0
+            }
+            
+            // 타이머 시작
+            Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { timer in
+                if timeRemaining > 0 {
+                    timeRemaining -= 0.01
+                } else {
+                    timer.invalidate()
+                    timeRemaining = 0.0
+                }
+            }
+        }
+    }
+}
+
 struct CrosshairView: View {
     var body: some View {
         GeometryReader { geometry in
             let width = geometry.size.width
             let height = geometry.size.height
-            Path { path in
-                // 세로선
-                path.move(to: CGPoint(x: width/2, y: 0))
-                path.addLine(to: CGPoint(x: width/2, y: height))
-                // 가로선
-                path.move(to: CGPoint(x: 0, y: height/2))
-                path.addLine(to: CGPoint(x: width, y: height/2))
+            let centerX = width / 2
+            let centerY = height / 2
+            
+            ZStack {
+                // 세로선 그라데이션
+                LinearGradient(
+                    stops: [
+                        .init(color: Color.white.opacity(0), location: 0),
+                        .init(color: Color.white.opacity(0.3), location: 0.35),
+                        .init(color: Color.white.opacity(1), location: 0.45),
+                        .init(color: Color.white.opacity(1), location: 0.55),
+                        .init(color: Color.white.opacity(0.3), location: 0.65),
+                        .init(color: Color.white.opacity(0), location: 1)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .mask(
+                    Path { path in
+                        path.move(to: CGPoint(x: centerX, y: 0))
+                        path.addLine(to: CGPoint(x: centerX, y: height))
+                    }
+                    .stroke(style: StrokeStyle(lineWidth: 1, dash: [6, 6]))
+                )
+                
+                // 가로선 그라데이션
+                LinearGradient(
+                    stops: [
+                        .init(color: Color.white.opacity(0), location: 0),
+                        .init(color: Color.white.opacity(0.3), location: 0.35),
+                        .init(color: Color.white.opacity(1), location: 0.45),
+                        .init(color: Color.white.opacity(1), location: 0.55),
+                        .init(color: Color.white.opacity(0.3), location: 0.65),
+                        .init(color: Color.white.opacity(0), location: 1)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .mask(
+                    Path { path in
+                        path.move(to: CGPoint(x: 0, y: centerY))
+                        path.addLine(to: CGPoint(x: width, y: centerY))
+                    }
+                    .stroke(style: StrokeStyle(lineWidth: 1, dash: [6, 6]))
+                )
             }
-            .stroke(style: StrokeStyle(lineWidth: 1, dash: [6, 6]))
-            .foregroundColor(Color.white.opacity(0.5))
         }
         .allowsHitTesting(false)
     }
