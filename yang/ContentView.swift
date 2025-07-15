@@ -40,43 +40,9 @@ struct ContentView: View {
                     .frame(width: 393, height: 393)
                     .cornerRadius(100)
                     .offset(x: 0, y: 16.50)
-                    VStack(alignment: .leading, spacing: nil) {
-                        HStack(spacing: 134) {
-                            HStack(spacing: 10) {
-                                Text("9:41")
-                                    .font(Font.custom("SF Pro", size: 17).weight(.regular))
-                                    .lineSpacing(22)
-                                    .foregroundColor(.white)
-                            }
-                            .padding(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 6))
-                            Rectangle()
-                                .foregroundColor(.clear)
-                                .frame(width: 124, height: 10)
-                            HStack(spacing: 7) {
-                                Rectangle()
-                                    .foregroundColor(.clear)
-                                    .frame(width: 25, height: 13)
-                                    .cornerRadius(4.30)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 4.30)
-                                            .inset(by: 0.50)
-                                            .stroke(.white, lineWidth: 0.50)
-                                    )
-                                Rectangle()
-                                    .foregroundColor(.clear)
-                                    .frame(width: 21, height: 9)
-                                    .background(.white)
-                                    .cornerRadius(2.50)
-                            }
-                            .padding(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 16))
-                        }
-                    }
-                    .padding(EdgeInsets(top: 21, leading: 0, bottom: 0, trailing: 0))
-                    .frame(width: 393, height: 50)
-                    .offset(x: 0, y: -401)
                     ZStack {
                         Text("YANG")
-                            .font(Font.custom("Press Start 2P", size: 16))
+                            .font(Font.custom("PressStart2P-Regular", size: 16))
                             .foregroundColor(.white)
                             .shadow(color: Color(red: 0.00, green: 0.00, blue: 0.00, opacity: 0.16), radius: 20, x: 0, y: 0)
                             .offset(x: 0, y: 0) // 가운데 정렬
@@ -126,10 +92,10 @@ struct ContentView: View {
                     VStack(spacing: 0) {
                         Spacer().frame(height: geometry.size.height * 0.15)
                         Text("Memory Bank")
-                            .font(Font.custom("Share Tech Mono", size: 28))
+                            .font(Font.custom("ShareTechMono-Regular", size: 28))
                             .foregroundColor(.white)
                         Text("Memories are not just about the past.\nThey shape who we are")
-                            .font(Font.custom("Share Tech Mono", size: 14))
+                            .font(Font.custom("ShareTechMono-Regular", size: 14))
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
                         Spacer()
@@ -138,10 +104,10 @@ struct ContentView: View {
                     VStack {
                         Spacer()
                         Text("23:08:30")
-                            .font(Font.custom("Press Start 2P", size: 16))
+                            .font(Font.custom("PressStart2P-Regular", size: 16))
                             .foregroundColor(Color(red: 1, green: 0.51, blue: 0.03))
                         Text("left for the next memory")
-                            .font(Font.custom("Share Tech Mono", size: 12))
+                            .font(Font.custom("ShareTechMono-Regular", size: 12))
                             .foregroundColor(.white)
                     }
                     .frame(width: geometry.size.width, height: geometry.size.height, alignment: .bottom)
