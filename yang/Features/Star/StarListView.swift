@@ -156,16 +156,19 @@ struct StarListView: UIViewRepresentable {
         lightNode.position = SCNVector3Zero
         node.addChildNode(lightNode)
 
-        // 2) 탭 인식을 위한 투명 히트 구체 (hitSphere)
-        let hitSphere = SCNSphere(radius: 0.5)
+        // 2) 탭 인식을 위한 투명 히트 구체 (hitSphere) - 별 크기에 맞게 조정
+        let hitRadius = max(0.5, starRadius * 1.5) // 별보다 충분히 크게, 최소 0.5
+        let hitSphere = SCNSphere(radius: CGFloat(hitRadius))
         let hitMat = SCNMaterial()
         hitMat.diffuse.contents = UIColor.clear
         hitMat.transparency = 0.0
+        hitMat.lightingModel = .constant
         hitSphere.materials = [hitMat]
 
         let hitNode = SCNNode(geometry: hitSphere)
         hitNode.name = star.id
         hitNode.position = SCNVector3Zero
+        hitNode.renderingOrder = 200 // 가장 앞에 렌더링하여 탭 우선순위 높임
         node.addChildNode(hitNode)
 
         return node
@@ -188,20 +191,43 @@ struct StarListView: UIViewRepresentable {
             guard
                 !self.isTransitioning,
                 let scnView = gesture.view as? SCNView,
-                let hitResult = scnView.hitTest(gesture.location(in: scnView), options: nil).first,
-                hitResult.node.geometry is SCNSphere,
-                let tappedNodeName = hitResult.node.name,
                 let root = scnView.window?.rootViewController
             else {
                 return
             }
+            
+            // hitTest 옵션 개선
+            let hitTestOptions: [SCNHitTestOption: Any] = [
+                .searchMode: SCNHitTestSearchMode.closest.rawValue,
+                .ignoreHiddenNodes: true
+            ]
+            
+            guard let hitResult = scnView.hitTest(gesture.location(in: scnView), options: hitTestOptions).first,
+                  let tappedNodeName = hitResult.node.name
+            else {
+                print("탭 감지 실패")
+                return
+            }
 
+            // 탭한 노드가 실제 별 노드인지 확인 (glow 노드도 처리)
+            let actualStarId: String
+            if tappedNodeName.contains("_glow_") || tappedNodeName.contains("_core") || tappedNodeName.contains("_middle") || tappedNodeName.contains("_outer") {
+                // glow, core, middle, outer 노드인 경우 별 ID 추출
+                let components = tappedNodeName.components(separatedBy: "_")
+                actualStarId = components[0]
+                print("Glow/Core/Middle/Outer 노드 탭됨: \(tappedNodeName) -> 별 ID: \(actualStarId)")
+            } else {
+                // 직접 별 노드인 경우
+                actualStarId = tappedNodeName
+            }
+            
             // 탭 직전 stars 내부 ID 디버깅
             print("현재 stars 배열 ID들:", stars.map { $0.id })
-            print("탭한 노드 이름:", tappedNodeName)
+            print("탭한 노드 이름: \(tappedNodeName) -> 실제 별 ID: \(actualStarId)")
 
             // stars 배열에서 해당 ID를 가진 Star 찾기
-            guard let star = stars.first(where: { $0.id == tappedNodeName }) else {
+            guard let star = stars.first(where: { $0.id == actualStarId }) else {
+                print("별을 찾을 수 없음: \(actualStarId)")
                 return
             }
 
