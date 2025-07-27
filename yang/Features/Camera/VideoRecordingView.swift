@@ -66,9 +66,9 @@ struct CameraSection: View {
     var body: some View {
         ZStack {
             CameraPreviewView(session: session)
-                .frame(width: 100, height: 160)
+                .frame(width: 90, height: 160)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    Rectangle()
                         .stroke(Color.white.opacity(0.5), lineWidth: 2)
                 )
             CrosshairView()
@@ -216,7 +216,7 @@ struct CameraPreviewView: UIViewRepresentable {
     
     func makeUIView(context: Context) -> UIView {
         let view: UIView = UIView()
-        view.backgroundColor = UIColor.yellow
+        view.backgroundColor = UIColor.black
         
         let previewLayer = AVCaptureVideoPreviewLayer(session: session)
         previewLayer.videoGravity = .resizeAspectFill
