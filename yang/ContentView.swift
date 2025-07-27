@@ -72,7 +72,7 @@ struct ContentView: View {
                 .padding(.trailing, 16)
                 .padding(.vertical, 20)
                 .frame(width: 393, height: 84, alignment: .trailing)
-                .offset(x: 0, y: -geometry.size.height * 0.38)
+                .offset(x: 0, y: -geometry.size.height * 0.45)
                 VStack(spacing: 0) {
                     Spacer().frame(height: geometry.size.height * 0.15)
                     Text("Memory Bank")
@@ -81,7 +81,9 @@ struct ContentView: View {
                     Text("Memories are not just about the past.\nThey shape who we are")
                         .font(Font.custom("ShareTechMono-Regular", size: 14))
                         .foregroundColor(.white)
+                        .opacity(0.6)
                         .multilineTextAlignment(.center)
+                        .padding(.top, 10)
                     Spacer()
                 }
                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
@@ -89,10 +91,12 @@ struct ContentView: View {
                     Spacer()
                     Text(timeLeft)
                         .font(Font.custom("PressStart2P-Regular", size: 16))
-                        .foregroundColor(Color(red: 1, green: 0.51, blue: 0.03))
+                        .foregroundColor(.white)
                     Text("left for the next memory")
                         .font(Font.custom("ShareTechMono-Regular", size: 12))
                         .foregroundColor(.white)
+                        .opacity(0.6)
+                        .padding(.top, 10)
                 }
                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .bottom)
                 .padding(.bottom, geometry.size.height * 0.3)

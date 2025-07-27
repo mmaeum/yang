@@ -65,25 +65,6 @@ struct StarInfoView: View {
                 VStack(spacing: 0) {
                     // 상단 컨트롤
                     HStack {
-                        // X 버튼
-                        Button(action: {
-                            player?.pause()
-                            player = nil
-                            if let root = UIApplication.shared.windows.first?.rootViewController {
-                                root.dismiss(animated: false, completion: nil)
-                            }
-                        }) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.black.opacity(0.7))
-                                    .frame(width: 44, height: 44)
-                                Image(systemName: "xmark")
-                                    .foregroundColor(.white)
-                                    .font(.system(size: 20, weight: .medium))
-                            }
-                        }
-                        .padding(.leading, 16)
-                        
                         Spacer()
                         
                         // 날짜 표시
