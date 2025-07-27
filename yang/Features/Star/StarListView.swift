@@ -66,109 +66,86 @@ struct StarListView: UIViewRepresentable {
             }
         }
     }
+    
+    private func makeRadialGradient(diameter: CGFloat) -> UIImage {
+        let size = CGSize(width: diameter, height: diameter)
+        UIGraphicsBeginImageContextWithOptions(size, false, 0)
+        guard let ctx = UIGraphicsGetCurrentContext() else {
+            fatalError("그래픽 컨텍스트 생성 실패")
+        }
+
+        ctx.clear(CGRect(origin: .zero, size: size))
+        
+        let colors = [UIColor.white.cgColor, UIColor.clear.cgColor] as CFArray
+        let locations: [CGFloat] = [0.0, 1.0]
+        let space = CGColorSpaceCreateDeviceRGB()
+        guard let grad = CGGradient(colorsSpace: space, colors: colors, locations: locations) else {
+            fatalError("그라데이션 생성 실패")
+        }
+
+        let center = CGPoint(x: size.width/2, y: size.height/2)
+        let radius = diameter/2
+
+        ctx.drawRadialGradient(
+            grad,
+            startCenter: center, startRadius: 0,
+            endCenter: center,   endRadius: radius,
+            options: .drawsBeforeStartLocation
+        )
+
+        let img = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        return img
+    }
 
     private func createStarNode(for star: Star) -> SCNNode {
-        // 밝기에 따라 별의 크기와 색상 조정 - 더 드라마틱한 차이
-        let brightness = star.brightness
-        let starRadius = 0.1 + (brightness * 0.2) // 밝을수록 더 크게 (0.1 ~ 0.3)
+        let brightness = CGFloat(star.brightness)
         
-        // 모든 별을 흰색 베이스로 설정, 밝기만으로 차이 표현
-        let starColor = UIColor.white
-        
-        // 메인 별 노드 생성
+        let starRadius = 0.1 + brightness * 0.2
+        let scaleFactor: CGFloat = 3.0
+        let scaledRadius = starRadius * scaleFactor
+
         let node = SCNNode()
         node.name = star.id
         node.position = star.position
-        
-        // 1) 핵심 별 (가장 밝은 부분)
-        let coreSphere = SCNSphere(radius: CGFloat(starRadius * 0.3))
-        let coreMat = SCNMaterial()
-        coreMat.diffuse.contents = UIColor.white
-        coreMat.lightingModel = .constant
-        coreMat.transparency = CGFloat(brightness * 0.9 + 0.1) // 더 극적인 투명도 차이
-        coreMat.isDoubleSided = true
-        coreMat.writesToDepthBuffer = false // 깊이 버퍼 쓰기 비활성화로 안정성 향상
-        coreSphere.materials = [coreMat]
-        
-        let coreNode = SCNNode(geometry: coreSphere)
-        coreNode.name = "\(star.id)_core"
-        coreNode.renderingOrder = 100 // 렌더링 순서 설정
-        node.addChildNode(coreNode)
-        
-        // 2) 중간 레이어 (별의 본체)
-        let middleSphere = SCNSphere(radius: CGFloat(starRadius * 0.6))
-        let middleMat = SCNMaterial()
-        middleMat.diffuse.contents = starColor
-        middleMat.lightingModel = .constant
-        middleMat.transparency = CGFloat(brightness * 0.8 + 0.1) // 더 극적인 투명도 차이
-        middleMat.isDoubleSided = true
-        middleMat.writesToDepthBuffer = false
-        middleSphere.materials = [middleMat]
-        
-        let middleNode = SCNNode(geometry: middleSphere)
-        middleNode.name = "\(star.id)_middle"
-        middleNode.renderingOrder = 50
-        node.addChildNode(middleNode)
-        
-        // 3) 외부 레이어 (빛나는 효과)
-        let outerSphere = SCNSphere(radius: CGFloat(starRadius))
-        let outerMat = SCNMaterial()
-        outerMat.diffuse.contents = starColor
-        outerMat.lightingModel = .constant
-        outerMat.transparency = CGFloat(brightness * 0.7) // 더 극적인 투명도 차이
-        outerMat.isDoubleSided = true
-        outerMat.writesToDepthBuffer = false
-        outerSphere.materials = [outerMat]
-        
-        let outerNode = SCNNode(geometry: outerSphere)
-        outerNode.name = "\(star.id)_outer"
-        outerNode.renderingOrder = 25
-        node.addChildNode(outerNode)
-        
-        // 4) 빛나는 효과를 위한 추가 레이어들
-        let glowScales: [Float] = [1.2, 1.5, 2.0]
-        for (index, scale) in glowScales.enumerated() {
-            let glowSphere = SCNSphere(radius: CGFloat(starRadius * scale))
-            let glowMat = SCNMaterial()
-            glowMat.diffuse.contents = starColor
-            glowMat.lightingModel = .constant
-            glowMat.transparency = CGFloat(brightness * (0.6 - Float(index) * 0.15)) // 더 극적인 glow 차이
-            glowMat.isDoubleSided = true
-            glowMat.writesToDepthBuffer = false
-            glowSphere.materials = [glowMat]
-            
-            let glowNode = SCNNode(geometry: glowSphere)
-            glowNode.name = "\(star.id)_glow_\(index)"
-            glowNode.renderingOrder = 10 - index // glow는 뒤에서부터 렌더링
-            node.addChildNode(glowNode)
-        }
-        
-        // 5) 간단한 광원 효과
-        let simpleLight = SCNLight()
-        simpleLight.type = .omni
-        simpleLight.intensity = CGFloat(brightness * 50.0)
-        simpleLight.color = starColor
-        simpleLight.attenuationStartDistance = 0.1
-        simpleLight.attenuationEndDistance = 2.0
-        
+
+        let planeSize = scaledRadius * 2.0
+        let gradImg = makeRadialGradient(diameter: planeSize * 50.0)
+
+        let plane = SCNPlane(width: planeSize, height: planeSize)
+        let mat = SCNMaterial()
+        mat.diffuse.contents      = gradImg
+        mat.lightingModel         = .constant
+        mat.blendMode             = .add
+        mat.isDoubleSided         = true
+        mat.writesToDepthBuffer   = false
+        plane.firstMaterial       = mat
+
+        let planeNode = SCNNode(geometry: plane)
+        let bb = SCNBillboardConstraint()
+        bb.freeAxes = .all
+        planeNode.constraints = [bb]
+        node.addChildNode(planeNode)
+
+        let light = SCNLight()
+        light.type                  = .omni
+        light.intensity             = brightness * 50.0
+        light.attenuationStartDistance = 0.1
+        light.attenuationEndDistance   = 2.0
         let lightNode = SCNNode()
-        lightNode.light = simpleLight
-        lightNode.position = SCNVector3Zero
+        lightNode.light = light
         node.addChildNode(lightNode)
 
-        // 2) 탭 인식을 위한 투명 히트 구체 (hitSphere) - 별 크기에 맞게 조정
-        let hitRadius = max(0.5, starRadius * 1.5) // 별보다 충분히 크게, 최소 0.5
-        let hitSphere = SCNSphere(radius: CGFloat(hitRadius))
+        let hitRadius = max(0.5, scaledRadius * 1.5)
+        let hitSphere = SCNSphere(radius: hitRadius)
         let hitMat = SCNMaterial()
-        hitMat.diffuse.contents = UIColor.clear
-        hitMat.transparency = 0.0
-        hitMat.lightingModel = .constant
-        hitSphere.materials = [hitMat]
-
+        hitMat.diffuse.contents      = UIColor.clear
+        hitMat.transparency          = 0.0
+        hitMat.lightingModel         = .constant
+        hitSphere.materials          = [hitMat]
         let hitNode = SCNNode(geometry: hitSphere)
         hitNode.name = star.id
-        hitNode.position = SCNVector3Zero
-        hitNode.renderingOrder = 200 // 가장 앞에 렌더링하여 탭 우선순위 높임
+        hitNode.renderingOrder = 200
         node.addChildNode(hitNode)
 
         return node
