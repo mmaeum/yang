@@ -12,18 +12,31 @@ struct StarListView: UIViewRepresentable {
         let scnView = SCNView(frame: .zero)
         scnView.scene = scene
         scnView.backgroundColor = .black
-        scnView.autoenablesDefaultLighting = true  // 조명 활성화
+        scnView.autoenablesDefaultLighting = false  // 기본 조명 비활성화
         scnView.allowsCameraControl = true
         
-        // 환경 조명 추가로 빛나는 효과 강화
+        // 안정적인 환경 조명 설정
         let ambientLight = SCNLight()
         ambientLight.type = .ambient
-        ambientLight.intensity = 0.1
+        ambientLight.intensity = 0.3  // 강도 증가
         ambientLight.color = UIColor.white
         
         let ambientNode = SCNNode()
         ambientNode.light = ambientLight
         scene.rootNode.addChildNode(ambientNode)
+        
+        // 전방향 조명 추가로 일관된 밝기 유지
+        let directionalLight = SCNLight()
+        directionalLight.type = .directional
+        directionalLight.intensity = 0.5
+        directionalLight.color = UIColor.white
+        directionalLight.castsShadow = false
+        
+        let directionalNode = SCNNode()
+        directionalNode.light = directionalLight
+        directionalNode.position = SCNVector3(0, 10, 10)
+        directionalNode.look(at: SCNVector3(0, 0, 0))
+        scene.rootNode.addChildNode(directionalNode)
 
         // 탭 제스처 추가
         let tap = UITapGestureRecognizer(
@@ -55,9 +68,9 @@ struct StarListView: UIViewRepresentable {
     }
 
     private func createStarNode(for star: Star) -> SCNNode {
-        // 밝기에 따라 별의 크기와 색상 조정
+        // 밝기에 따라 별의 크기와 색상 조정 - 더 드라마틱한 차이
         let brightness = star.brightness
-        let starRadius = 0.15 + (brightness * 0.1) // 밝을수록 크게
+        let starRadius = 0.1 + (brightness * 0.2) // 밝을수록 더 크게 (0.1 ~ 0.3)
         
         // 모든 별을 흰색 베이스로 설정, 밝기만으로 차이 표현
         let starColor = UIColor.white
@@ -72,11 +85,14 @@ struct StarListView: UIViewRepresentable {
         let coreMat = SCNMaterial()
         coreMat.diffuse.contents = UIColor.white
         coreMat.lightingModel = .constant
-        coreMat.transparency = CGFloat(brightness * 0.8 + 0.2) // 밝을수록 더 불투명하게
+        coreMat.transparency = CGFloat(brightness * 0.9 + 0.1) // 더 극적인 투명도 차이
+        coreMat.isDoubleSided = true
+        coreMat.writesToDepthBuffer = false // 깊이 버퍼 쓰기 비활성화로 안정성 향상
         coreSphere.materials = [coreMat]
         
         let coreNode = SCNNode(geometry: coreSphere)
         coreNode.name = "\(star.id)_core"
+        coreNode.renderingOrder = 100 // 렌더링 순서 설정
         node.addChildNode(coreNode)
         
         // 2) 중간 레이어 (별의 본체)
@@ -84,11 +100,14 @@ struct StarListView: UIViewRepresentable {
         let middleMat = SCNMaterial()
         middleMat.diffuse.contents = starColor
         middleMat.lightingModel = .constant
-        middleMat.transparency = CGFloat(brightness * 0.6 + 0.2) // 밝을수록 더 불투명하게
+        middleMat.transparency = CGFloat(brightness * 0.8 + 0.1) // 더 극적인 투명도 차이
+        middleMat.isDoubleSided = true
+        middleMat.writesToDepthBuffer = false
         middleSphere.materials = [middleMat]
         
         let middleNode = SCNNode(geometry: middleSphere)
         middleNode.name = "\(star.id)_middle"
+        middleNode.renderingOrder = 50
         node.addChildNode(middleNode)
         
         // 3) 외부 레이어 (빛나는 효과)
@@ -96,11 +115,14 @@ struct StarListView: UIViewRepresentable {
         let outerMat = SCNMaterial()
         outerMat.diffuse.contents = starColor
         outerMat.lightingModel = .constant
-        outerMat.transparency = CGFloat(brightness * 0.5) // 밝을수록 더 불투명하게
+        outerMat.transparency = CGFloat(brightness * 0.7) // 더 극적인 투명도 차이
+        outerMat.isDoubleSided = true
+        outerMat.writesToDepthBuffer = false
         outerSphere.materials = [outerMat]
         
         let outerNode = SCNNode(geometry: outerSphere)
         outerNode.name = "\(star.id)_outer"
+        outerNode.renderingOrder = 25
         node.addChildNode(outerNode)
         
         // 4) 빛나는 효과를 위한 추가 레이어들
@@ -110,15 +132,18 @@ struct StarListView: UIViewRepresentable {
             let glowMat = SCNMaterial()
             glowMat.diffuse.contents = starColor
             glowMat.lightingModel = .constant
-            glowMat.transparency = CGFloat(brightness * (0.4 - Float(index) * 0.1)) // 밝을수록 더 불투명하게
+            glowMat.transparency = CGFloat(brightness * (0.6 - Float(index) * 0.15)) // 더 극적인 glow 차이
+            glowMat.isDoubleSided = true
+            glowMat.writesToDepthBuffer = false
             glowSphere.materials = [glowMat]
             
             let glowNode = SCNNode(geometry: glowSphere)
             glowNode.name = "\(star.id)_glow_\(index)"
+            glowNode.renderingOrder = 10 - index // glow는 뒤에서부터 렌더링
             node.addChildNode(glowNode)
         }
         
-        // 5) 간단한 광원 효과 
+        // 5) 간단한 광원 효과
         let simpleLight = SCNLight()
         simpleLight.type = .omni
         simpleLight.intensity = CGFloat(brightness * 50.0)
