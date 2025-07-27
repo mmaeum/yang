@@ -69,8 +69,8 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
         
         session.beginConfiguration()
         
-        // 세션 품질 설정
-        session.sessionPreset = .medium
+        // 세션 품질 설정 - HD로 변경
+        session.sessionPreset = .hd1920x1080
         
         // 비디오 입력 설정
         guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
@@ -109,9 +109,22 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
         
         // 비디오 출력 설정
         let movieOutput = AVCaptureMovieFileOutput()
+        
+        if let connection = movieOutput.connection(with: .video) {
+            connection.videoOrientation = .portrait
+        }
+        
         if session.canAddOutput(movieOutput) {
             session.addOutput(movieOutput)
             videoOutput = movieOutput
+            
+            // 비디오 코덱 및 품질 설정
+            if let connection = movieOutput.connection(with: .video) {
+                if connection.isVideoStabilizationSupported {
+                    connection.preferredVideoStabilizationMode = .auto
+                }
+            }
+            
             print("Movie output added successfully")
         }
         

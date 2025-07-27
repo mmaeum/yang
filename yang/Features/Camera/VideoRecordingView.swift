@@ -66,7 +66,7 @@ struct CameraSection: View {
     var body: some View {
         ZStack {
             CameraPreviewView(session: session)
-                .frame(width: 90, height: 160)
+                .frame(width: 100, height: 160)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.white.opacity(0.5), lineWidth: 2)
