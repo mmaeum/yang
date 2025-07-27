@@ -65,16 +65,6 @@ struct StarInfoView: View {
                 VStack(spacing: 0) {
                     // 상단 컨트롤
                     HStack {
-                        Spacer()
-                        
-                        // 날짜 표시
-                        Text(star.createdAt, format: .dateTime.year().month().day())
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.white)
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 12)
-                            .background(Color.black.opacity(0.5))
-                            .cornerRadius(100)
                         
                         Spacer()
                         
@@ -86,6 +76,17 @@ struct StarInfoView: View {
                     }
                     .padding(.top, 21)
                     
+                    HStack {
+                        Spacer()
+                        Text(star.createdAt, format: .dateTime.year().month().day())
+                            .font(Font.custom("Press Start 2P", size: 12))
+                            .foregroundColor(.white)
+                            .shadow(color: Color(red: 0.00, green: 0.00, blue: 0.00, opacity: 0.16), radius: 20, x: 0, y: 0)
+                            .offset(x: 0, y: 10)
+                        Spacer()
+                    }
+                    .padding(.top, 10)
+                    
                     Spacer()
                     
                     // 하단 컨트롤
@@ -96,19 +97,22 @@ struct StarInfoView: View {
                             Button(action: {
                                 isSharePresented = true
                             }) {
-                                Text("Share")
-                                    .font(.system(size: 17, weight: .medium))
-                                    .foregroundColor(.white)
-                                    .padding(.vertical, 14)
-                                    .padding(.horizontal, 40)
-                                    .frame(width: 191)
-                                    .cornerRadius(100)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 100)
-                                            .inset(by: 0.50)
-                                            .stroke(.white, lineWidth: 0.50)
-                                    )
+                                HStack(spacing: 8) {
+                                    Image(systemName: "square.and.arrow.up")
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(.white)
+                                    
+                                    Text("Share")
+                                        .font(.system(size: 17, weight: .medium))
+                                        .foregroundColor(.white)
+                                }
+                                .padding(.vertical, 14)
+                                .padding(.horizontal, 40)
+                                .frame(width: 191)
+                                .background(Color.black.opacity(0.6))
+                                .cornerRadius(100)
                             }
+                            .opacity(0.8)
                             Spacer()
                         }
                         .frame(height: 96)
