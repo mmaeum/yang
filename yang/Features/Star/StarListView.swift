@@ -12,8 +12,18 @@ struct StarListView: UIViewRepresentable {
         let scnView = SCNView(frame: .zero)
         scnView.scene = scene
         scnView.backgroundColor = .black
-        scnView.autoenablesDefaultLighting = false
+        scnView.autoenablesDefaultLighting = true  // 조명 활성화
         scnView.allowsCameraControl = true
+        
+        // 환경 조명 추가로 빛나는 효과 강화
+        let ambientLight = SCNLight()
+        ambientLight.type = .ambient
+        ambientLight.intensity = 0.1
+        ambientLight.color = UIColor.white
+        
+        let ambientNode = SCNNode()
+        ambientNode.light = ambientLight
+        scene.rootNode.addChildNode(ambientNode)
 
         // 탭 제스처 추가
         let tap = UITapGestureRecognizer(
@@ -45,18 +55,81 @@ struct StarListView: UIViewRepresentable {
     }
 
     private func createStarNode(for star: Star) -> SCNNode {
-        // 1) 실제로 보이는 흰 구체
-        let sphere = SCNSphere(radius: 0.2)
-        let mat = SCNMaterial()
-        mat.diffuse.contents = UIColor.white
-        mat.emission.contents = UIColor.white
-        mat.lightingModel = .constant
-        sphere.materials = [mat]
-
-        let node = SCNNode(geometry: sphere)
-        // 부모 노드에도 star.id(= asset.localIdentifier) 그대로 이름 설정
+        // 밝기에 따라 별의 크기와 색상 조정
+        let brightness = star.brightness
+        let starRadius = 0.15 + (brightness * 0.1) // 밝을수록 크게
+        
+        // 모든 별을 흰색 베이스로 설정, 밝기만으로 차이 표현
+        let starColor = UIColor.white
+        
+        // 메인 별 노드 생성
+        let node = SCNNode()
         node.name = star.id
         node.position = star.position
+        
+        // 1) 핵심 별 (가장 밝은 부분)
+        let coreSphere = SCNSphere(radius: CGFloat(starRadius * 0.3))
+        let coreMat = SCNMaterial()
+        coreMat.diffuse.contents = UIColor.white
+        coreMat.lightingModel = .constant
+        coreMat.transparency = CGFloat(brightness * 0.8 + 0.2) // 밝을수록 더 불투명하게
+        coreSphere.materials = [coreMat]
+        
+        let coreNode = SCNNode(geometry: coreSphere)
+        coreNode.name = "\(star.id)_core"
+        node.addChildNode(coreNode)
+        
+        // 2) 중간 레이어 (별의 본체)
+        let middleSphere = SCNSphere(radius: CGFloat(starRadius * 0.6))
+        let middleMat = SCNMaterial()
+        middleMat.diffuse.contents = starColor
+        middleMat.lightingModel = .constant
+        middleMat.transparency = CGFloat(brightness * 0.6 + 0.2) // 밝을수록 더 불투명하게
+        middleSphere.materials = [middleMat]
+        
+        let middleNode = SCNNode(geometry: middleSphere)
+        middleNode.name = "\(star.id)_middle"
+        node.addChildNode(middleNode)
+        
+        // 3) 외부 레이어 (빛나는 효과)
+        let outerSphere = SCNSphere(radius: CGFloat(starRadius))
+        let outerMat = SCNMaterial()
+        outerMat.diffuse.contents = starColor
+        outerMat.lightingModel = .constant
+        outerMat.transparency = CGFloat(brightness * 0.5) // 밝을수록 더 불투명하게
+        outerSphere.materials = [outerMat]
+        
+        let outerNode = SCNNode(geometry: outerSphere)
+        outerNode.name = "\(star.id)_outer"
+        node.addChildNode(outerNode)
+        
+        // 4) 빛나는 효과를 위한 추가 레이어들
+        let glowScales: [Float] = [1.2, 1.5, 2.0]
+        for (index, scale) in glowScales.enumerated() {
+            let glowSphere = SCNSphere(radius: CGFloat(starRadius * scale))
+            let glowMat = SCNMaterial()
+            glowMat.diffuse.contents = starColor
+            glowMat.lightingModel = .constant
+            glowMat.transparency = CGFloat(brightness * (0.4 - Float(index) * 0.1)) // 밝을수록 더 불투명하게
+            glowSphere.materials = [glowMat]
+            
+            let glowNode = SCNNode(geometry: glowSphere)
+            glowNode.name = "\(star.id)_glow_\(index)"
+            node.addChildNode(glowNode)
+        }
+        
+        // 5) 간단한 광원 효과 
+        let simpleLight = SCNLight()
+        simpleLight.type = .omni
+        simpleLight.intensity = CGFloat(brightness * 50.0)
+        simpleLight.color = starColor
+        simpleLight.attenuationStartDistance = 0.1
+        simpleLight.attenuationEndDistance = 2.0
+        
+        let lightNode = SCNNode()
+        lightNode.light = simpleLight
+        lightNode.position = SCNVector3Zero
+        node.addChildNode(lightNode)
 
         // 2) 탭 인식을 위한 투명 히트 구체 (hitSphere)
         let hitSphere = SCNSphere(radius: 0.5)
@@ -66,7 +139,6 @@ struct StarListView: UIViewRepresentable {
         hitSphere.materials = [hitMat]
 
         let hitNode = SCNNode(geometry: hitSphere)
-        // 자식 히트 노드에도 같은 이름 star.id
         hitNode.name = star.id
         hitNode.position = SCNVector3Zero
         node.addChildNode(hitNode)
