@@ -63,19 +63,6 @@ struct StarInfoView: View {
                 
                 // UI 요소들을 오버레이
                 VStack(spacing: 0) {
-                    // 상단 컨트롤
-                    HStack {
-                        
-                        Spacer()
-                        
-                        // 오른쪽 여백을 위한 투명 뷰
-                        Circle()
-                            .fill(Color.clear)
-                            .frame(width: 44, height: 44)
-                            .padding(.trailing, 16)
-                    }
-                    .padding(.top, 21)
-                    
                     HStack {
                         Spacer()
                         Text(star.createdAt, format: .dateTime.year().month().day())
@@ -117,16 +104,6 @@ struct StarInfoView: View {
                         }
                         .frame(height: 96)
                         
-                        // 하단 인디케이터
-                        HStack {
-                            Spacer()
-                            Rectangle()
-                                .foregroundColor(.white)
-                                .frame(width: 144, height: 5)
-                                .cornerRadius(100)
-                            Spacer()
-                        }
-                        .frame(height: 34)
                     }
                 }
             }
