@@ -78,7 +78,8 @@ class FilteredVideoRecorder: NSObject {
         }
         
         let ciImage = CIImage(cvImageBuffer: imageBuffer)
-        sepiaFilter.setValue(ciImage, forKey: kCIInputImageKey)
+        let rotatedCiImage = ciImage.oriented(.right);
+        sepiaFilter.setValue(rotatedCiImage, forKey: kCIInputImageKey)
         
         guard let filteredImage = sepiaFilter.outputImage,
               let pixelBufferPool = pixelBufferAdaptor.pixelBufferPool else {
