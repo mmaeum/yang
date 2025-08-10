@@ -22,11 +22,7 @@ struct ContentView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Group 제거, 내부 View들을 직접 나열
-                Ellipse()
-                    .foregroundColor(.clear)
-                    .frame(width: geometry.size.width * 1.2, height: geometry.size.width * 1.2)
-                    .offset(x: 0, y: 0.50)
+                // 동영상 StarField 영역
                 StarFieldView(
                     scene: scene,
                     stars: $stars,
@@ -35,6 +31,7 @@ struct ContentView: View {
                     height: geometry.size.height
                 )
                 .frame(width: geometry.size.width, height: geometry.size.height)
+                // 햄버거 버튼 + 타이틀 영역
                 VStack(spacing: 0) {
                     Spacer()
                         .frame(height: UIApplication.shared.connectedScenes
@@ -47,17 +44,18 @@ struct ContentView: View {
                         }
                         .padding(.trailing, 8)
                     }
-                    .padding(.bottom, 32)
+                    .padding(.bottom, geometry.size.height * 0.05)
                     HeaderTextView()
                     Spacer()
                 }
-                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
+                .frame(width: geometry.size.width, alignment: .top)
+                // 카운트 다운 영역
                 VStack {
                     Spacer()
                     CountdownTimerView(timeLeft: timeLeft)
                 }
-                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .bottom)
-                .padding(.bottom, geometry.size.height * 0.3)
+                .frame(width: geometry.size.width, alignment: .bottom)
+                .padding(.bottom, geometry.size.height * 0.2)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
             .background(.black)
