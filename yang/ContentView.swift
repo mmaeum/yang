@@ -27,73 +27,34 @@ struct ContentView: View {
                     .foregroundColor(.clear)
                     .frame(width: geometry.size.width * 1.2, height: geometry.size.width * 1.2)
                     .offset(x: 0, y: 0.50)
-                ZStack {
-                    if isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(1.5)
-                    } else {
-                        StarListView(scene: scene, stars: $stars)
-                            .frame(width: geometry.size.width, height: geometry.size.height)
-                    }
-                }
+                StarFieldView(
+                    scene: scene,
+                    stars: $stars,
+                    isLoading: isLoading,
+                    width: geometry.size.width,
+                    height: geometry.size.height
+                )
                 .frame(width: geometry.size.width, height: geometry.size.height)
-                HStack(alignment: .center, spacing: 0) {
-                    Spacer()
-                    Button(action: {
-                        // 메뉴 액션 추가 예정
-                    }) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.black.opacity(0.40))
-                                .frame(width: 40, height: 40)
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.white.opacity(0.30), lineWidth: 0.25)
-                                )
-                            VStack(spacing: 3) {
-                                Rectangle()
-                                    .fill(Color.white)
-                                    .frame(width: 20, height: 2)
-                                Rectangle()
-                                    .fill(Color.white)
-                                    .frame(width: 20, height: 2)
-                                Rectangle()
-                                    .fill(Color.white)
-                                    .frame(width: 20, height: 2)
-                            }
-                        }
-                    }
-                }
-                .padding(.trailing, 16)
-                .padding(.vertical, 20)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .offset(x: 0, y: 0)
-                .padding(.top, geometry.size.height * 0.1)
                 VStack(spacing: 0) {
-                    Spacer().frame(height: geometry.size.height * 0.15)
-                    Text("Memory Bank")
-                        .font(Font.custom("ShareTechMono-Regular", size: 28))
-                        .foregroundColor(.white)
-                    Text("Memories are not just about the past.\nThey shape who we are")
-                        .font(Font.custom("ShareTechMono-Regular", size: 14))
-                        .foregroundColor(.white)
-                        .opacity(0.6)
-                        .multilineTextAlignment(.center)
-                        .padding(.top, 10)
+                    Spacer()
+                        .frame(height: UIApplication.shared.connectedScenes
+                            .compactMap { $0 as? UIWindowScene }
+                            .first?.statusBarManager?.statusBarFrame.height ?? 44)
+                    HStack {
+                        Spacer()
+                        HamburgerMenuButton {
+                            // 메뉴 액션 추가 예정
+                        }
+                        .padding(.trailing, 8)
+                    }
+                    .padding(.bottom, 32)
+                    HeaderTextView()
                     Spacer()
                 }
                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
                 VStack {
                     Spacer()
-                    Text(timeLeft)
-                        .font(Font.custom("PressStart2P-Regular", size: 16))
-                        .foregroundColor(.white)
-                    Text("left for the next memory")
-                        .font(Font.custom("ShareTechMono-Regular", size: 12))
-                        .foregroundColor(.white)
-                        .opacity(0.6)
-                        .padding(.top, 10)
+                    CountdownTimerView(timeLeft: timeLeft)
                 }
                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .bottom)
                 .padding(.bottom, geometry.size.height * 0.3)
