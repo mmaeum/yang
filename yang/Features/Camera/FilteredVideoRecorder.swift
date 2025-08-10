@@ -7,17 +7,26 @@ class FilteredVideoRecorder: NSObject {
     private var videoWriterInput: AVAssetWriterInput?
     private var pixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor?
     private let context = CIContext()
-    private var sepiaFilter: CIFilter?
+    private var colorControlsFilter: CIFilter?
+    private var bloomFilter: CIFilter?
     private var isRecording = false
     
     override init() {
         super.init()
-        setupFilter()
+        setupFilmFilters()
     }
     
-    private func setupFilter() {
-        sepiaFilter = CIFilter(name: "CISepiaTone")
-        sepiaFilter?.setValue(0.8, forKey: kCIInputIntensityKey)
+    private func setupFilmFilters() {
+        // 미묘한 색감 조절 - 선명하게 유지
+        colorControlsFilter = CIFilter(name: "CIColorControls")
+        colorControlsFilter?.setValue(1.05, forKey: kCIInputSaturationKey) // 약간만 채도 증가
+        colorControlsFilter?.setValue(1.02, forKey: kCIInputContrastKey) // 미세한 콘트라스트 증가
+        colorControlsFilter?.setValue(0.0, forKey: kCIInputBrightnessKey) // 밝기는 그대로
+        
+        // 빛 번짐 효과 (블룸)
+        bloomFilter = CIFilter(name: "CIBloom")
+        bloomFilter?.setValue(0.3, forKey: kCIInputRadiusKey) // 번짐 반지름
+        bloomFilter?.setValue(0.15, forKey: kCIInputIntensityKey) // 번짐 강도
     }
     
     func startRecording(to outputURL: URL) {
@@ -72,17 +81,33 @@ class FilteredVideoRecorder: NSObject {
               let videoWriterInput = videoWriterInput,
               videoWriterInput.isReadyForMoreMediaData,
               let pixelBufferAdaptor = pixelBufferAdaptor,
-              let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer),
-              let sepiaFilter = sepiaFilter else {
+              let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             return
         }
         
         let ciImage = CIImage(cvImageBuffer: imageBuffer)
-        let rotatedCiImage = ciImage.oriented(.right);
-        sepiaFilter.setValue(rotatedCiImage, forKey: kCIInputImageKey)
+        let rotatedCiImage = ciImage.oriented(.right)
         
-        guard let filteredImage = sepiaFilter.outputImage,
-              let pixelBufferPool = pixelBufferAdaptor.pixelBufferPool else {
+        // 필터 체인 적용
+        var currentImage = rotatedCiImage
+        
+        // 1. 미묘한 색감 조절
+        if let colorFilter = colorControlsFilter {
+            colorFilter.setValue(currentImage, forKey: kCIInputImageKey)
+            if let output = colorFilter.outputImage {
+                currentImage = output
+            }
+        }
+        
+        // 2. 빛 번짐 효과 (블룸)
+        if let bloom = bloomFilter {
+            bloom.setValue(currentImage, forKey: kCIInputImageKey)
+            if let output = bloom.outputImage {
+                currentImage = output
+            }
+        }
+        
+        guard let pixelBufferPool = pixelBufferAdaptor.pixelBufferPool else {
             return
         }
         
@@ -93,7 +118,7 @@ class FilteredVideoRecorder: NSObject {
             return
         }
         
-        context.render(filteredImage, to: outputPixelBuffer)
+        context.render(currentImage, to: outputPixelBuffer)
         
         pixelBufferAdaptor.append(outputPixelBuffer, withPresentationTime: presentationTime)
     }
