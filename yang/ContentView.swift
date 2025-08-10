@@ -6,6 +6,7 @@ struct ContentView: View {
     @State private var stars: [Star] = []
     @State private var isLoading = true
     @State private var timeLeft: String = ""
+    @State private var showCredits = false
     
     private let scene: SCNScene = {
         let scene = SCNScene()
@@ -40,9 +41,10 @@ struct ContentView: View {
                     HStack {
                         Spacer()
                         HamburgerMenuButton {
-                            // 메뉴 액션 추가 예정
+                            showCredits = true
                         }
                         .padding(.trailing, 8)
+                        .zIndex(1000)
                     }
                     .padding(.bottom, geometry.size.height * 0.05)
                     HeaderTextView()
@@ -61,6 +63,9 @@ struct ContentView: View {
             .background(.black)
         }
         .ignoresSafeArea(.all)
+        .fullScreenCover(isPresented: $showCredits) {
+            CreditsView()
+        }
         .onAppear {
             loadVideos()
             updateTimeLeft()
