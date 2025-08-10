@@ -25,7 +25,7 @@ struct ContentView: View {
                 // Group 제거, 내부 View들을 직접 나열
                 Ellipse()
                     .foregroundColor(.clear)
-                    .frame(width: 967, height: 967)
+                    .frame(width: geometry.size.width * 1.2, height: geometry.size.width * 1.2)
                     .offset(x: 0, y: 0.50)
                 ZStack {
                     if isLoading {
@@ -34,13 +34,10 @@ struct ContentView: View {
                             .scaleEffect(1.5)
                     } else {
                         StarListView(scene: scene, stars: $stars)
-                            .frame(width: 393, height: 393)
-                            .cornerRadius(100)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
                     }
                 }
-                .frame(width: 393, height: 393)
-                .cornerRadius(100)
-                .offset(x: 0, y: 16.50)
+                .frame(width: geometry.size.width, height: geometry.size.height)
                 HStack(alignment: .center, spacing: 0) {
                     Spacer()
                     Button(action: {
@@ -68,11 +65,11 @@ struct ContentView: View {
                         }
                     }
                 }
-                .padding(.leading, 333)
                 .padding(.trailing, 16)
                 .padding(.vertical, 20)
-                .frame(width: 393, height: 84, alignment: .trailing)
-                .offset(x: 0, y: -geometry.size.height * 0.45)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .offset(x: 0, y: 0)
+                .padding(.top, geometry.size.height * 0.1)
                 VStack(spacing: 0) {
                     Spacer().frame(height: geometry.size.height * 0.15)
                     Text("Memory Bank")
@@ -104,7 +101,7 @@ struct ContentView: View {
             .frame(width: geometry.size.width, height: geometry.size.height)
             .background(.black)
         }
-        .frame(width: 393, height: 852)
+        .ignoresSafeArea(.all)
         .onAppear {
             loadVideos()
             updateTimeLeft()
