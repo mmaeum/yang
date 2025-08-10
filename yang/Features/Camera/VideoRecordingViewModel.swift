@@ -8,8 +8,11 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
     @Published var recordingTimeRemaining: Double = 3.0
     let session = AVCaptureSession()
     private var videoOutput: AVCaptureMovieFileOutput?
+    private var videoDataOutput: AVCaptureVideoDataOutput?
+    private var filteredRecorder: FilteredVideoRecorder?
     private var currentCamera: AVCaptureDevice?
     private var recordingTimer: Timer?
+    private var startTime: CMTime?
     var onDismiss: (() -> Void)?
     var onVideoSaved: (() -> Void)?
     
@@ -78,7 +81,7 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
             session.commitConfiguration()
             return
         }
-        
+                
         do {
             let videoInput = try AVCaptureDeviceInput(device: videoDevice)
             if session.canAddInput(videoInput) {
@@ -110,10 +113,6 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
         // 비디오 출력 설정
         let movieOutput = AVCaptureMovieFileOutput()
         
-        if let connection = movieOutput.connection(with: .video) {
-            connection.videoOrientation = .portrait
-        }
-        
         if session.canAddOutput(movieOutput) {
             session.addOutput(movieOutput)
             videoOutput = movieOutput
@@ -123,10 +122,35 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
                 if connection.isVideoStabilizationSupported {
                     connection.preferredVideoStabilizationMode = .auto
                 }
+
+                connection.videoRotationAngle = 0
             }
             
             print("Movie output added successfully")
         }
+        
+        // 필터링을 위한 비디오 데이터 출력 설정
+        let dataOutput = AVCaptureVideoDataOutput()
+
+        if let connection = dataOutput.connection(with: .video) {
+            
+            connection.videoRotationAngle = 90
+        }
+        
+
+        dataOutput.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+        ]
+        dataOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "videoDataQueue"))
+        
+        if session.canAddOutput(dataOutput) {
+            session.addOutput(dataOutput)
+            videoDataOutput = dataOutput
+            print("Video data output added successfully")
+        }
+        
+        // 필터링된 비디오 레코더 초기화
+        filteredRecorder = FilteredVideoRecorder()
         
         session.commitConfiguration()
         
@@ -139,13 +163,15 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
     }
     
     func startRecording() {
-        guard let videoOutput = videoOutput else { return }
+        guard let filteredRecorder = filteredRecorder else { return }
         
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         let fileUrl = paths[0].appendingPathComponent("video_\(Date().timeIntervalSince1970).mov")
-        videoOutput.startRecording(to: fileUrl, recordingDelegate: self)
+        
+        filteredRecorder.startRecording(to: fileUrl)
         isRecording = true
         recordingTimeRemaining = 3.0
+        startTime = CMTime.zero
         
         // 3초 타이머 시작
         recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] timer in
@@ -162,9 +188,18 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
     func stopRecording() {
         recordingTimer?.invalidate()
         recordingTimer = nil
-        videoOutput?.stopRecording()
         isRecording = false
         recordingTimeRemaining = 3.0
+        
+        filteredRecorder?.stopRecording { [weak self] outputURL in
+            guard let self = self, let outputURL = outputURL else {
+                print("Failed to stop recording")
+                return
+            }
+            
+            print("Filtered video recorded to: \(outputURL)")
+            self.saveVideoToYangAlbum(videoURL: outputURL)
+        }
     }
     
     func switchCamera() {
@@ -263,16 +298,20 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
     }
 }
 
-extension VideoRecordingViewModel: AVCaptureFileOutputRecordingDelegate {
-    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
-        if let error = error {
-            print("Recording error: \(error.localizedDescription)")
-            return
+extension VideoRecordingViewModel: AVCaptureVideoDataOutputSampleBufferDelegate {
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        guard isRecording else { return }
+        
+        let presentationTime: CMTime
+        if let startTime = startTime, startTime == CMTime.zero {
+            self.startTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+            presentationTime = CMTime.zero
+        } else if let startTime = startTime {
+            presentationTime = CMTimeSubtract(CMSampleBufferGetPresentationTimeStamp(sampleBuffer), startTime)
+        } else {
+            presentationTime = CMTime.zero
         }
         
-        print("Video recorded to: \(outputFileURL)")
-        
-        // "yang" 앨범에 비디오 저장
-        saveVideoToYangAlbum(videoURL: outputFileURL)
+        filteredRecorder?.recordFrame(sampleBuffer: sampleBuffer, at: presentationTime)
     }
 }
