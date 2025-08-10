@@ -9,6 +9,9 @@ class FilteredVideoRecorder: NSObject {
     private let context = CIContext()
     private var colorControlsFilter: CIFilter?
     private var bloomFilter: CIFilter?
+    private var grainGenerator: CIFilter?
+    private var grainMonochrome: CIFilter?
+    private var grainBlend: CIFilter?
     private var isRecording = false
     
     override init() {
@@ -27,6 +30,15 @@ class FilteredVideoRecorder: NSObject {
         bloomFilter = CIFilter(name: "CIBloom")
         bloomFilter?.setValue(0.3, forKey: kCIInputRadiusKey) // 번짐 반지름
         bloomFilter?.setValue(0.15, forKey: kCIInputIntensityKey) // 번짐 강도
+        
+        // ISO 800 필름 그레인
+        grainGenerator = CIFilter(name: "CIRandomGenerator")
+        
+        grainMonochrome = CIFilter(name: "CIColorMonochrome")
+        grainMonochrome?.setValue(CIColor.white, forKey: kCIInputColorKey)
+        grainMonochrome?.setValue(0.7, forKey: kCIInputIntensityKey)
+        
+        grainBlend = CIFilter(name: "CISoftLightBlendMode")
     }
     
     func startRecording(to outputURL: URL) {
@@ -104,6 +116,32 @@ class FilteredVideoRecorder: NSObject {
             bloom.setValue(currentImage, forKey: kCIInputImageKey)
             if let output = bloom.outputImage {
                 currentImage = output
+            }
+        }
+        
+        // 3. ISO 800 필름 그레인 추가
+        if let grainGen = grainGenerator,
+           let grainMono = grainMonochrome,
+           let grainBlendFilter = grainBlend {
+            
+            if let grainImage = grainGen.outputImage {
+                // 노이즈를 흑백으로 변환
+                grainMono.setValue(grainImage, forKey: kCIInputImageKey)
+                
+                if let monoGrain = grainMono.outputImage {
+                    // 투명도 조절을 위한 색상 매트릭스 적용
+                    let scaledGrain = monoGrain.applyingFilter("CIColorMatrix", parameters: [
+                        "inputAVector": CIVector(x: 0, y: 0, z: 0, w: 0.08) // ISO 800 수준의 그레인 강도
+                    ])
+                    
+                    // 소프트 라이트 블렌드로 자연스럽게 합성
+                    grainBlendFilter.setValue(scaledGrain, forKey: kCIInputBackgroundImageKey)
+                    grainBlendFilter.setValue(currentImage, forKey: kCIInputImageKey)
+                    
+                    if let output = grainBlendFilter.outputImage {
+                        currentImage = output
+                    }
+                }
             }
         }
         
