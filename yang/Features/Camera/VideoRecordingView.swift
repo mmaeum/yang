@@ -65,7 +65,7 @@ struct CameraSection: View {
     
     var body: some View {
         ZStack {
-            FilteredCameraPreviewView(session: session)
+            CameraPreviewView(session: session)
                 .frame(width: 90, height: 160)
                 .overlay(
                     Rectangle()
