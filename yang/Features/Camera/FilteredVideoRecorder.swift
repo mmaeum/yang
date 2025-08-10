@@ -13,6 +13,7 @@ class FilteredVideoRecorder: NSObject {
     private var grainMonochrome: CIFilter?
     private var grainBlend: CIFilter?
     private var isRecording = false
+    private var frameCount: Int = 0
     
     override init() {
         super.init()
@@ -79,6 +80,7 @@ class FilteredVideoRecorder: NSObject {
             assetWriter?.startSession(atSourceTime: .zero)
             
             isRecording = true
+            frameCount = 0 // 녹화 시작 시 프레임 카운트 초기화
             print("Started filtered video recording")
             
         } catch {
@@ -119,12 +121,23 @@ class FilteredVideoRecorder: NSObject {
             }
         }
         
-        // 3. ISO 800 필름 그레인 추가
+        // 3. ISO 800 필름 그레인 추가 (프레임별로 다른 노이즈)
         if let grainGen = grainGenerator,
            let grainMono = grainMonochrome,
            let grainBlendFilter = grainBlend {
             
-            if let grainImage = grainGen.outputImage {
+            // 2-4 프레임마다 다른 시드로 노이즈 생성
+            frameCount += 1
+            let grainChangeInterval = 3 // 3프레임마다 그레인 변경
+            let grainSeed = (frameCount / grainChangeInterval) % 1000 // 시드를 순환시켜 메모리 효율성 유지
+            
+            // 의사 랜덤 좌표 생성 (서로 다른 주기로 변화)
+            let xOffset = sin(Double(grainSeed) * 0.1234) * 500 // 다른 주기
+            let yOffset = cos(Double(grainSeed) * 0.0789) * 500 // 다른 주기
+            
+            let randomSeedTransform = CGAffineTransform(translationX: CGFloat(xOffset), y: CGFloat(yOffset))
+            
+            if let grainImage = grainGen.outputImage?.transformed(by: randomSeedTransform) {
                 // 노이즈를 흑백으로 변환
                 grainMono.setValue(grainImage, forKey: kCIInputImageKey)
                 
