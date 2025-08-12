@@ -17,18 +17,22 @@ struct CreditsView: View {
                         }) {
                             ZStack {
                                 Circle()
-                                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                                    .frame(width: 44, height: 44)
+                                    .fill(Color.black.opacity(0.40))
+                                    .frame(width: 40, height: 40)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Color.white.opacity(0.30), lineWidth: 0.25)
+                                    )
                                 
                                 Image(systemName: "xmark")
-                                    .font(.system(size: 16, weight: .medium))
+                                    .font(.system(size: 14, weight: .medium))
                                     .foregroundColor(.white)
                             }
                         }
-                        .padding(.trailing, 8)
+                        .padding(.trailing, 20)
                         .zIndex(1000)
                     }
-                    .padding(.bottom, geometry.size.height * 0.05)
+                    .padding(.top, geometry.safeAreaInsets.top + 60)
                     
                     Spacer()
                     

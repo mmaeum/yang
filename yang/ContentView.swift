@@ -35,15 +35,15 @@ struct ContentView: View {
                 // 햄버거 버튼 + 타이틀 영역
                 VStack(spacing: 0) {
                     Spacer()
-                        .frame(height: UIApplication.shared.connectedScenes
+                        .frame(height: (UIApplication.shared.connectedScenes
                             .compactMap { $0 as? UIWindowScene }
-                            .first?.statusBarManager?.statusBarFrame.height ?? 44)
+                            .first?.statusBarManager?.statusBarFrame.height ?? 44) + 60)
                     HStack {
                         Spacer()
                         HamburgerMenuButton {
                             showCredits = true
                         }
-                        .padding(.trailing, 8)
+                        .padding(.trailing, 20)
                         .zIndex(1000)
                     }
                     .padding(.bottom, geometry.size.height * 0.05)
