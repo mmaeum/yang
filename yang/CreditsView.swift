@@ -38,13 +38,13 @@ struct CreditsView: View {
                     
                     VStack(spacing: geometry.size.height * 0.08) {
                         Text("YANG")
-                            .font(Font.custom("PressStart2P-Regular", size: 28))
+                            .font(Font.custom("PressStart2P-Regular", size: 12))
                             .foregroundColor(.white)
                             .shadow(color: Color.black.opacity(0.16), radius: 20, x: 0, y: 0)
                         
                         VStack(spacing: geometry.size.height * 0.015) {
                             Text("Credits")
-                                .font(Font.custom("ShareTechMono-Regular", size: 28))
+                                .font(Font.custom("ShareTechMono-Regular", size: 12))
                                 .foregroundColor(.white)
                                 .opacity(0.60)
                             Text("@twidy")
@@ -54,14 +54,14 @@ struct CreditsView: View {
                         
                         VStack(spacing: geometry.size.height * 0.015) {
                             Text("Legal")
-                                .font(Font.custom("ShareTechMono-Regular", size: 28))
+                                .font(Font.custom("ShareTechMono-Regular", size: 11))
                                 .foregroundColor(.white)
                                 .opacity(0.60)
                             Text("Privacy Policy")
-                                .font(Font.custom("ShareTechMono-Regular", size: 14))
+                                .font(Font.custom("ShareTechMono-Regular", size: 12))
                                 .foregroundColor(.white)
                             Text("Terms of Service")
-                                .font(Font.custom("ShareTechMono-Regular", size: 14))
+                                .font(Font.custom("ShareTechMono-Regular", size: 12))
                                 .foregroundColor(.white)
                         }
                     }
