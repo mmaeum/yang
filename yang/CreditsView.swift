@@ -47,7 +47,7 @@ struct CreditsView: View {
                                 .font(Font.custom("ShareTechMono-Regular", size: 12))
                                 .foregroundColor(.white)
                                 .opacity(0.60)
-                            Text("@twidy")
+                            Link("@twidy", destination: URL(string: "https://x.com/Teammaeum0228")!)
                                 .font(Font.custom("ShareTechMono-Regular", size: 14))
                                 .foregroundColor(.white)
                         }
@@ -57,10 +57,10 @@ struct CreditsView: View {
                                 .font(Font.custom("ShareTechMono-Regular", size: 11))
                                 .foregroundColor(.white)
                                 .opacity(0.60)
-                            Text("Privacy Policy")
+                            Link("Privacy Policy", destination: URL(string: "https://sungjungjo.notion.site/privacy-policy-2311208e804580a9a698d51a1c7d9ccc")!)
                                 .font(Font.custom("ShareTechMono-Regular", size: 12))
                                 .foregroundColor(.white)
-                            Text("Terms of Service")
+                            Link("Terms of Service", destination: URL(string: "https://sungjungjo.notion.site/terms-of-Service-2311208e80458075b6fdc9704db8886")!)
                                 .font(Font.custom("ShareTechMono-Regular", size: 12))
                                 .foregroundColor(.white)
                         }
