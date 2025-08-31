@@ -60,7 +60,7 @@ struct CreditsView: View {
                             Link("Privacy Policy", destination: URL(string: "https://sungjungjo.notion.site/privacy-policy-2311208e804580a9a698d51a1c7d9ccc")!)
                                 .font(Font.custom("ShareTechMono-Regular", size: 12))
                                 .foregroundColor(.white)
-                            Link("Terms of Service", destination: URL(string: "https://sungjungjo.notion.site/terms-of-Service-2311208e80458075b6fdc9704db8886")!)
+                            Link("Terms of Service", destination: URL(string: "https://sungjungjo.notion.site/terms-of-Service-2311208e80458075b6fdc9704db28886")!)
                                 .font(Font.custom("ShareTechMono-Regular", size: 12))
                                 .foregroundColor(.white)
                         }
