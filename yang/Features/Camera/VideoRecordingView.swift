@@ -132,9 +132,15 @@ struct RecordingActiveView: View {
                     .fill(Color(red: 1.0, green: 0.0, blue: 0.4)) // FF0066
                     .frame(width: 70, height: 70)
                 
-                Text(String(format: "%.2f", timeRemaining))
-                    .font(.system(size: 12, weight: .bold, design: .monospaced))
-                    .foregroundColor(.white)
+                VStack(spacing: 2) {
+                    Text("REC")
+                        .font(.system(size: 15, weight: .bold, design: .monospaced))
+                        .foregroundColor(.white)
+                    
+                    Text(String(format: "%.2f", timeRemaining))
+                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                        .foregroundColor(.white)
+                }
             }
         }
         .onAppear {
