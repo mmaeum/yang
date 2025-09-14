@@ -11,7 +11,7 @@ struct StarListView: UIViewRepresentable {
     func makeUIView(context: Context) -> SCNView {
         let scnView = SCNView(frame: .zero)
         scnView.scene = scene
-        scnView.backgroundColor = .black
+        scnView.backgroundColor = .clear  // 투명한 배경으로 변경
         scnView.autoenablesDefaultLighting = false  // 기본 조명 비활성화
         scnView.allowsCameraControl = true
         

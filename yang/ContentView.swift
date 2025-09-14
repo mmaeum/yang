@@ -10,13 +10,13 @@ struct ContentView: View {
     
     private let scene: SCNScene = {
         let scene = SCNScene()
-        scene.background.contents = UIColor.black
-        
+        scene.background.contents = UIColor.clear  // 투명한 배경으로 변경
+
         let camNode = SCNNode()
         camNode.camera = SCNCamera()
         camNode.position = SCNVector3(0, 0, 30)
         scene.rootNode.addChildNode(camNode)
-        
+
         return scene
     }()
     
