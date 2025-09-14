@@ -13,6 +13,7 @@ class AppState: ObservableObject {
     @Published var isLaunching = true
     @Published var hasTodayVideo = false
     @Published var isCheckingPhotos = true
+    @Published var showContents = false
 }
 
 @main
@@ -31,25 +32,36 @@ struct RootView: View {
     @EnvironmentObject var appState: AppState
     
     var body: some View {
-        if appState.isLaunching {
-            LaunchScreenView()
-                .onAppear {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
-                        withAnimation {
+        ZStack {
+            Color.black.ignoresSafeArea()
+
+            if appState.isLaunching {
+                LaunchScreenView()
+                    .onAppear {
+                        checkTodayVideos()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 4.42) {
+                            appState.showContents = true
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) {
                             appState.isLaunching = false
-                            checkTodayVideos()
                         }
                     }
-                }
-        } else if appState.isCheckingPhotos {
-            LoadingView()
-        } else {
-            if appState.hasTodayVideo {
+            } else if appState.isCheckingPhotos {
+                LoadingView()
+            }
+
+
+
+            if appState.showContents {
                 ContentView()
-            } else {
+                .opacity(appState.showContents && appState.hasTodayVideo ? 1 : 0)
+                .animation(.easeInOut(duration: 1.5), value: appState.showContents && appState.hasTodayVideo)
+                
                 VideoRecordingView(onVideoSaved: {
                     appState.hasTodayVideo = true
                 })
+                .opacity(appState.showContents && appState.hasTodayVideo ? 0 : 1)
+                .animation(.easeInOut(duration: 0.5), value: appState.showContents && !appState.hasTodayVideo)
             }
         }
     }
@@ -88,5 +100,11 @@ struct LoadingView: View {
             }
         }
         .ignoresSafeArea()
+        .onAppear {
+            print("LoadingView appeared")
+        }
+        .onDisappear {
+            print("LoadingView disappeared")
+        }
     }
 }

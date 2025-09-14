@@ -14,7 +14,6 @@ struct VideoRecordingView: View {
     
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
             
             VStack {
                 Spacer().frame(height: 60)
@@ -62,7 +61,8 @@ struct HeaderSection: View {
 
 struct CameraSection: View {
     let session: AVCaptureSession
-    
+    @State private var isVisible = false
+
     var body: some View {
         ZStack {
             CameraPreviewView(session: session)
@@ -74,6 +74,13 @@ struct CameraSection: View {
             CrosshairView()
         }
         .frame(maxWidth: .infinity, maxHeight: 360)
+        .scaleEffect(isVisible ? 1.0 : 0.1)
+        .animation(.easeOut(duration: 0.5), value: isVisible)
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.5)) {
+                isVisible = true
+            }
+        }
     }
 }
 

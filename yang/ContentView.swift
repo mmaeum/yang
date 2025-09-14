@@ -57,7 +57,6 @@ struct ContentView: View {
                 .padding(.bottom, geometry.size.height * 0.2)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
-            .background(.black)
         }
         .ignoresSafeArea(.all)
         .overlay(
