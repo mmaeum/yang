@@ -1,19 +1,28 @@
 import SwiftUI
 
 struct CreditsView: View {
-    @Environment(\.dismiss) private var dismiss
+    var onDismiss: (() -> Void)? = nil
     
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                Color.black
-                    .ignoresSafeArea(.all)
+                // 그라데이션 배경
+                RadialGradient(
+                    gradient: Gradient(colors: [
+                        Color.black,
+                        Color(red: 73/255, green: 43/255, blue: 0/255, opacity: 0.8)
+                    ]),
+                    center: UnitPoint(x: 0.5, y: 0.47),
+                    startRadius: geometry.size.width * 0.3,
+                    endRadius: geometry.size.width * 1.2
+                )
+                .ignoresSafeArea(.all)
                 
                 VStack(spacing: 0) {
                     HStack {
                         Spacer()
                         Button(action: {
-                            dismiss()
+                            onDismiss?()
                         }) {
                             ZStack {
                                 Circle()
@@ -70,6 +79,7 @@ struct CreditsView: View {
                 }
             }
         }
+        .background(.black)
         .ignoresSafeArea(.all)
     }
 }

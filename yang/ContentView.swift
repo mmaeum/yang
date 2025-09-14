@@ -60,9 +60,14 @@ struct ContentView: View {
             .background(.black)
         }
         .ignoresSafeArea(.all)
-        .fullScreenCover(isPresented: $showCredits) {
-            CreditsView()
-        }
+        .overlay(
+            CreditsView(onDismiss: {
+                showCredits = false
+            })
+                .opacity(showCredits ? 1 : 0)
+                .animation(.easeInOut(duration: 0.3), value: showCredits)
+                .allowsHitTesting(showCredits)
+        )
         .onAppear {
             loadVideos()
             updateTimeLeft()
