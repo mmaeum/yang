@@ -158,6 +158,7 @@ struct StarListView: UIViewRepresentable {
     class Coordinator: NSObject, UIGestureRecognizerDelegate {
         @Binding var stars: [Star]
         @Binding var isTransitioning: Bool
+        private var transitionDelegate: ZoomTransitionDelegate?
 
         init(stars: Binding<[Star]>, isTransitioning: Binding<Bool>) {
             _stars = stars
@@ -211,11 +212,24 @@ struct StarListView: UIViewRepresentable {
             // 중복 탭 방지
             self.isTransitioning = true
 
+            // 터치 지점을 화면 좌표로 변환
+            let tapLocation = gesture.location(in: scnView)
+            let screenBounds = UIScreen.main.bounds
+            let originFrame = CGRect(
+                x: tapLocation.x - 20,
+                y: tapLocation.y - 20,
+                width: 40,
+                height: 40
+            )
+
+            // 커스텀 전환 델리게이트 생성
+            self.transitionDelegate = ZoomTransitionDelegate(originFrame: originFrame)
+
             // StarInfoView 풀스크린 모달로 표시
             let infoView = StarInfoView(star: star)
             let vc = UIHostingController(rootView: infoView)
             vc.modalPresentationStyle = .fullScreen
-            vc.modalTransitionStyle = .crossDissolve
+            vc.transitioningDelegate = self.transitionDelegate
 
             DispatchQueue.main.async {
                 root.present(vc, animated: true) {
