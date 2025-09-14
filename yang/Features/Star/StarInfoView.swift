@@ -21,19 +21,29 @@ struct ActivityViewController: UIViewControllerRepresentable {
 
 struct FullScreenVideoPlayer: UIViewControllerRepresentable {
     let player: AVPlayer
-    
+    @Binding var isPlaying: Bool
+
     func makeUIViewController(context: Context) -> AVPlayerViewController {
         let controller = AVPlayerViewController()
         controller.player = player
-        controller.showsPlaybackControls = true
+        controller.showsPlaybackControls = false  // 기본 컨트롤 숨기기
         controller.videoGravity = .resizeAspectFill
-        
-        // 비디오 자동 재생 설정
-        player.play()
-        
+
+        // 루프 재생을 위한 알림 설정
+        NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: player.currentItem,
+            queue: .main
+        ) { _ in
+            player.seek(to: .zero)
+            if isPlaying {
+                player.play()
+            }
+        }
+
         return controller
     }
-    
+
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {}
 }
 
@@ -45,6 +55,7 @@ struct StarInfoView: View {
     @State private var isTransitioning = false
     @State private var isSharePresented = false
     @State private var videoURL: URL?
+    @State private var isPlaying = true
 
     var body: some View {
         GeometryReader { geometry in
@@ -57,13 +68,29 @@ struct StarInfoView: View {
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         .scaleEffect(1.5)
                 } else if let player = player {
-                    FullScreenVideoPlayer(player: player)
+                    FullScreenVideoPlayer(player: player, isPlaying: $isPlaying)
                         .ignoresSafeArea()
+                        .onTapGesture {
+                            togglePlayback()
+                        }
                 }
                 
                 // UI 요소들을 오버레이
                 VStack(spacing: 0) {
                     HStack {
+                        // 닫기 버튼 (왼쪽 상단)
+                        Button(action: {
+                            presentationMode.wrappedValue.dismiss()
+                        }) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.white)
+                                .frame(width: 44, height: 44)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
+                        }
+                        .opacity(0.8)
+
                         Spacer()
                         Text(star.createdAt, format: .dateTime.year().month().day())
                             .font(Font.custom("Press Start 2P", size: 12))
@@ -73,9 +100,10 @@ struct StarInfoView: View {
                         Spacer()
                     }
                     .padding(.top, 10)
-                    
+                    .padding(.horizontal, 20)
+
                     Spacer()
-                    
+
                     // 하단 컨트롤
                     VStack(spacing: 0) {
                         // Share 버튼
@@ -88,7 +116,7 @@ struct StarInfoView: View {
                                     Image(systemName: "square.and.arrow.up")
                                         .font(.system(size: 16, weight: .medium))
                                         .foregroundColor(.white)
-                                    
+
                                     Text("Share")
                                         .font(.system(size: 17, weight: .medium))
                                         .foregroundColor(.white)
@@ -103,7 +131,7 @@ struct StarInfoView: View {
                             Spacer()
                         }
                         .frame(height: 96)
-                        
+
                     }
                 }
             }
@@ -128,9 +156,33 @@ struct StarInfoView: View {
                 self.videoURL = url
                 let newPlayer = AVPlayer(url: url)
                 self.player = newPlayer
-                newPlayer.play() // 여기서도 재생 시작
+
+                // 루프 재생을 위한 알림 설정
+                NotificationCenter.default.addObserver(
+                    forName: .AVPlayerItemDidPlayToEndTime,
+                    object: newPlayer.currentItem,
+                    queue: .main
+                ) { _ in
+                    newPlayer.seek(to: .zero)
+                    if isPlaying {
+                        newPlayer.play()
+                    }
+                }
+
+                newPlayer.play() // 자동 재생 시작
             }
             isLoading = false
         }
+    }
+
+    private func togglePlayback() {
+        guard let player = player else { return }
+
+        if isPlaying {
+            player.pause()
+        } else {
+            player.play()
+        }
+        isPlaying.toggle()
     }
 }
