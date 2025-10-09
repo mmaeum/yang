@@ -214,7 +214,6 @@ struct StarListView: UIViewRepresentable {
 
             // 터치 지점을 화면 좌표로 변환
             let tapLocation = gesture.location(in: scnView)
-            let screenBounds = UIScreen.main.bounds
             let originFrame = CGRect(
                 x: tapLocation.x - 20,
                 y: tapLocation.y - 20,
