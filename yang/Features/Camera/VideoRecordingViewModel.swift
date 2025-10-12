@@ -18,6 +18,60 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
     
     override init() {
         super.init()
+        setupNotifications()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    private func setupNotifications() {
+        // 앱이 포그라운드로 돌아올 때 카메라 세션 재시작
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(willEnterForeground),
+            name: UIApplication.willEnterForegroundNotification,
+            object: nil
+        )
+
+        // 앱이 백그라운드로 갈 때 카메라 세션 중지
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(didEnterBackground),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
+    }
+
+    @objc private func willEnterForeground() {
+        // 녹화 중이 아닐 때만 세션 재시작
+        if !isRecording {
+            restartSession()
+        }
+    }
+
+    @objc private func didEnterBackground() {
+        // 백그라운드에서 카메라 세션 중지 (리소스 절약)
+        if session.isRunning && !isRecording {
+            session.stopRunning()
+        }
+    }
+
+    private func restartSession() {
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            guard let self = self else { return }
+
+            // 세션이 실행 중이면 먼저 중지
+            if self.session.isRunning {
+                self.session.stopRunning()
+            }
+
+            // 세션 재시작
+            self.session.startRunning()
+            DispatchQueue.main.async {
+                print("Camera session restarted from background")
+            }
+        }
     }
     
     func checkPermissions() {
