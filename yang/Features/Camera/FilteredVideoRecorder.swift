@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 import CoreImage
+import ImageIO
 
 class FilteredVideoRecorder: NSObject {
     private var assetWriter: AVAssetWriter?
@@ -99,11 +100,11 @@ class FilteredVideoRecorder: NSObject {
             return
         }
         
-        let ciImage = CIImage(cvImageBuffer: imageBuffer)
-        let rotatedCiImage = ciImage.oriented(.right)
-        
-        // 필터 체인 적용
-        var currentImage = rotatedCiImage
+    let baseImage = CIImage(cvImageBuffer: imageBuffer)
+    let orientedImage = orientedCIImage(baseImage, from: sampleBuffer)
+
+    // 필터 체인 적용
+    var currentImage = orientedImage
         
         // 1. 미묘한 색감 조절
         if let colorFilter = colorControlsFilter {
@@ -172,6 +173,28 @@ class FilteredVideoRecorder: NSObject {
         context.render(currentImage, to: outputPixelBuffer)
         
         pixelBufferAdaptor.append(outputPixelBuffer, withPresentationTime: presentationTime)
+    }
+
+    private func orientedCIImage(_ ciImage: CIImage, from sampleBuffer: CMSampleBuffer) -> CIImage {
+        if let orientationRaw = CMGetAttachment(sampleBuffer,
+                                                key: kCGImagePropertyOrientation,
+                                                attachmentModeOut: nil) as? NSNumber,
+           let orientation = CGImagePropertyOrientation(rawValue: orientationRaw.uint32Value) {
+            return ciImage.oriented(orientation)
+        }
+
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+            return ciImage
+        }
+
+        let width = CVPixelBufferGetWidth(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
+
+        if width > height {
+            return ciImage.oriented(.right)
+        }
+
+        return ciImage
     }
     
     func stopRecording(completion: @escaping (URL?) -> Void) {

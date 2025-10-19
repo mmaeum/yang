@@ -3,10 +3,13 @@ import SceneKit
 import Photos
 
 struct ContentView: View {
+    @EnvironmentObject var appState: AppState
     @State private var stars: [Star] = []
     @State private var isLoading = true
     @State private var timeLeft: String = ""
     @State private var showCredits = false
+    @State private var countdownStartOfDay = Calendar.current.startOfDay(for: Date())
+    @State private var countdownTimer: Timer?
     
     private let scene: SCNScene = {
         let scene = SCNScene()
@@ -70,9 +73,13 @@ struct ContentView: View {
         .onAppear {
             loadVideos()
             updateTimeLeft()
-            Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            countdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
                 updateTimeLeft()
             }
+        }
+        .onDisappear {
+            countdownTimer?.invalidate()
+            countdownTimer = nil
         }
     }
     
@@ -152,12 +159,31 @@ struct ContentView: View {
     private func updateTimeLeft() {
         let now = Date()
         let calendar = Calendar.current
-        let tomorrow = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: now)!)
-        let diff = Int(tomorrow.timeIntervalSince(now))
+        let endOfCurrentDay = calendar.date(byAdding: .day, value: 1, to: countdownStartOfDay)!
+
+        if now >= endOfCurrentDay {
+            countdownStartOfDay = calendar.startOfDay(for: now)
+            handleCountdownFinished()
+        }
+
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: countdownStartOfDay)!
+        let diff = max(0, Int(endOfDay.timeIntervalSince(now)))
         let hours = diff / 3600
         let minutes = (diff % 3600) / 60
         let seconds = diff % 60
         timeLeft = String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+    }
+
+    private func handleCountdownFinished() {
+        DispatchQueue.main.async {
+            appState.hasTodayVideo = false
+        }
+
+        PhotoLibraryChecker.checkForTodayVideosInYangFolder { hasVideos in
+            DispatchQueue.main.async {
+                appState.hasTodayVideo = hasVideos
+            }
+        }
     }
 }
 
@@ -175,6 +201,9 @@ struct SeededRandomNumberGenerator: RandomNumberGenerator {
 }
 
 struct ContentView_Previews: PreviewProvider {
-    static var previews: some View { ContentView() }
+    static var previews: some View {
+        ContentView()
+            .environmentObject(AppState())
+    }
 }
 

@@ -7,17 +7,19 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
     @Published var isRecording = false
     @Published var recordingTimeRemaining: Double = 3.0
     let session = AVCaptureSession()
-    private var videoOutput: AVCaptureMovieFileOutput?
     private var videoDataOutput: AVCaptureVideoDataOutput?
     private var filteredRecorder: FilteredVideoRecorder?
     private var currentCamera: AVCaptureDevice?
     private var recordingTimer: Timer?
     private var startTime: CMTime?
+    private let sessionQueue = DispatchQueue(label: "com.mmaeum.yang.camera.session", qos: .userInitiated)
+    private let sessionQueueKey = DispatchSpecificKey<Void>()
     var onDismiss: (() -> Void)?
     var onVideoSaved: (() -> Void)?
     
     override init() {
         super.init()
+        sessionQueue.setSpecific(key: sessionQueueKey, value: ())
         setupNotifications()
     }
 
@@ -45,33 +47,43 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
 
     @objc private func willEnterForeground() {
         // 녹화 중이 아닐 때만 세션 재시작
-        if !isRecording {
-            restartSession()
+        guard !isRecording else { return }
+        sessionQueue.async { [weak self] in
+            self?.restartSession()
         }
     }
 
     @objc private func didEnterBackground() {
         // 백그라운드에서 카메라 세션 중지 (리소스 절약)
-        if session.isRunning && !isRecording {
-            session.stopRunning()
+        guard !isRecording else { return }
+        sessionQueue.async { [weak self] in
+            self?.stopSessionIfNeeded()
         }
     }
 
     private func restartSession() {
-        DispatchQueue.global(qos: .background).async { [weak self] in
-            guard let self = self else { return }
+        assertOnSessionQueue()
+        stopSessionIfNeeded()
+        startSessionIfNeeded()
+        print("Camera session restarted from background")
+    }
 
-            // 세션이 실행 중이면 먼저 중지
-            if self.session.isRunning {
-                self.session.stopRunning()
-            }
+    private func startSessionIfNeeded() {
+        assertOnSessionQueue()
+        guard !session.isRunning else { return }
+        session.startRunning()
+        print("Camera session started running")
+    }
 
-            // 세션 재시작
-            self.session.startRunning()
-            DispatchQueue.main.async {
-                print("Camera session restarted from background")
-            }
-        }
+    private func stopSessionIfNeeded() {
+        assertOnSessionQueue()
+        guard session.isRunning else { return }
+        session.stopRunning()
+        print("Camera session stopped")
+    }
+
+    private func assertOnSessionQueue() {
+        dispatchPrecondition(condition: .onQueue(sessionQueue))
     }
     
     func checkPermissions() {
@@ -95,47 +107,52 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
         // 사진첩 권한 확인
         switch PHPhotoLibrary.authorizationStatus() {
         case .authorized, .limited:
-            DispatchQueue.main.async {
-                self.setupSession()
+            sessionQueue.async { [weak self] in
+                self?.setupSession()
             }
         case .notDetermined:
             PHPhotoLibrary.requestAuthorization { [weak self] status in
                 if status == .authorized || status == .limited {
-                    DispatchQueue.main.async {
+                    self?.sessionQueue.async { [weak self] in
                         self?.setupSession()
                     }
                 }
             }
         default:
             print("Photo library access denied")
-            DispatchQueue.main.async {
-                self.setupSession()
+            sessionQueue.async { [weak self] in
+                self?.setupSession()
             }
         }
     }
     
     private func setupSession() {
-        // 이미 실행 중이면 중지
-        if session.isRunning {
-            session.stopRunning()
-        }
-        
+    assertOnSessionQueue()
+
+        stopSessionIfNeeded()
+
+        session.beginConfiguration()
+
         // 기존 입력/출력 제거
         session.inputs.forEach { session.removeInput($0) }
         session.outputs.forEach { session.removeOutput($0) }
-        
-        session.beginConfiguration()
-        
-        // 세션 품질 설정 - HD로 변경
-        session.sessionPreset = .hd1920x1080
-        
+
+    videoDataOutput = nil
+
+        // 세션 품질 설정 - HD로 변경 (가능하면)
+        if session.canSetSessionPreset(.hd1920x1080) {
+            session.sessionPreset = .hd1920x1080
+        } else if session.canSetSessionPreset(.high) {
+            session.sessionPreset = .high
+        }
+
         // 비디오 입력 설정
         guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
             print("Failed to get video device")
             session.commitConfiguration()
             return
         }
-                
+
         do {
             let videoInput = try AVCaptureDeviceInput(device: videoDevice)
             if session.canAddInput(videoInput) {
@@ -150,7 +167,7 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
             session.commitConfiguration()
             return
         }
-        
+
         // 오디오 입력 설정
         if let audioDevice = AVCaptureDevice.default(for: .audio) {
             do {
@@ -163,57 +180,39 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
                 print("Error creating audio input: \(error)")
             }
         }
-        
-        // 비디오 출력 설정
-        let movieOutput = AVCaptureMovieFileOutput()
-        
-        if session.canAddOutput(movieOutput) {
-            session.addOutput(movieOutput)
-            videoOutput = movieOutput
-            
-            // 비디오 코덱 및 품질 설정
-            if let connection = movieOutput.connection(with: .video) {
-                if connection.isVideoStabilizationSupported {
-                    connection.preferredVideoStabilizationMode = .auto
-                }
 
-                connection.videoRotationAngle = 0
-            }
-            
-            print("Movie output added successfully")
-        }
-        
         // 필터링을 위한 비디오 데이터 출력 설정
         let dataOutput = AVCaptureVideoDataOutput()
-
-        if let connection = dataOutput.connection(with: .video) {
-            
-            connection.videoRotationAngle = 90
-        }
-        
-
         dataOutput.videoSettings = [
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
         ]
+        dataOutput.alwaysDiscardsLateVideoFrames = false
         dataOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "videoDataQueue"))
-        
+
         if session.canAddOutput(dataOutput) {
             session.addOutput(dataOutput)
+            if let connection = dataOutput.connection(with: .video) {
+                if #available(iOS 17.0, *) {
+                    if connection.isVideoRotationAngleSupported(90) {
+                        connection.videoRotationAngle = 90
+                    }
+                } else if connection.isVideoOrientationSupported {
+                    connection.videoOrientation = .portrait
+                }
+                if connection.isVideoStabilizationSupported {
+                    connection.preferredVideoStabilizationMode = .auto
+                }
+            }
             videoDataOutput = dataOutput
             print("Video data output added successfully")
         }
-        
+
         // 필터링된 비디오 레코더 초기화
         filteredRecorder = FilteredVideoRecorder()
-        
+
         session.commitConfiguration()
-        
-        DispatchQueue.global(qos: .background).async { [weak self] in
-            self?.session.startRunning()
-            DispatchQueue.main.async {
-                print("Camera session started running")
-            }
-        }
+
+        startSessionIfNeeded()
     }
     
     func startRecording() {
@@ -257,29 +256,59 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
     }
     
     func switchCamera() {
-        guard let currentCamera = currentCamera else { return }
-        
-        let newPosition: AVCaptureDevice.Position = currentCamera.position == .back ? .front : .back
-        
-        guard let newCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition),
-              let newInput = try? AVCaptureDeviceInput(device: newCamera) else {
-            return
+        sessionQueue.async { [weak self] in
+            guard let self = self,
+                  let currentCamera = self.currentCamera else { return }
+
+            self.assertOnSessionQueue()
+
+            let newPosition: AVCaptureDevice.Position = currentCamera.position == .back ? .front : .back
+
+            guard let newCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition),
+                  let newInput = try? AVCaptureDeviceInput(device: newCamera) else {
+                return
+            }
+
+            self.session.beginConfiguration()
+
+            // 기존 비디오 입력 제거
+            let currentVideoInputs = self.session.inputs.compactMap { $0 as? AVCaptureDeviceInput }.filter { $0.device.hasMediaType(.video) }
+            currentVideoInputs.forEach { self.session.removeInput($0) }
+
+            // 새로운 비디오 입력 추가
+            if self.session.canAddInput(newInput) {
+                self.session.addInput(newInput)
+                self.currentCamera = newCamera
+            }
+
+            // 오디오 입력이 없는 경우 다시 추가
+            if !self.session.inputs.contains(where: { ($0 as? AVCaptureDeviceInput)?.device.hasMediaType(.audio) == true }),
+               let audioDevice = AVCaptureDevice.default(for: .audio),
+               let audioInput = try? AVCaptureDeviceInput(device: audioDevice),
+               self.session.canAddInput(audioInput) {
+                self.session.addInput(audioInput)
+            }
+
+            // 비디오 출력 방향 재설정
+            if let dataOutput = self.videoDataOutput,
+               let connection = dataOutput.connection(with: .video),
+               connection.isVideoStabilizationSupported {
+                connection.preferredVideoStabilizationMode = .auto
+            }
+
+            if let dataOutput = self.videoDataOutput,
+               let connection = dataOutput.connection(with: .video) {
+                if #available(iOS 17.0, *) {
+                    if connection.isVideoRotationAngleSupported(90) {
+                        connection.videoRotationAngle = 90
+                    }
+                } else if connection.isVideoOrientationSupported {
+                    connection.videoOrientation = .portrait
+                }
+            }
+
+            self.session.commitConfiguration()
         }
-        
-        session.beginConfiguration()
-        
-        // 기존 비디오 입력 제거
-        if let currentInput = session.inputs.first as? AVCaptureDeviceInput {
-            session.removeInput(currentInput)
-        }
-        
-        // 새로운 비디오 입력 추가
-        if session.canAddInput(newInput) {
-            session.addInput(newInput)
-            self.currentCamera = newCamera
-        }
-        
-        session.commitConfiguration()
     }
     
     private func saveVideoToYangAlbum(videoURL: URL) {
@@ -304,14 +333,18 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
                         // 임시 파일 삭제
                         try? FileManager.default.removeItem(at: videoURL)
                         // 카메라 세션 종료
-                        self?.session.stopRunning()
+                        self?.sessionQueue.async { [weak self] in
+                            self?.stopSessionIfNeeded()
+                        }
                         // 화면 닫기
                         self?.onDismiss?()
                         self?.onVideoSaved?()
                     } else {
                         print("Failed to save video to yang album: \(error?.localizedDescription ?? "Unknown error")")
                         // 실패해도 카메라 세션 종료
-                        self?.session.stopRunning()
+                        self?.sessionQueue.async { [weak self] in
+                            self?.stopSessionIfNeeded()
+                        }
                         // 실패해도 화면 닫기
                         self?.onDismiss?()
                         self?.onVideoSaved?()

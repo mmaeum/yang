@@ -227,24 +227,41 @@ struct CrosshairView: View {
 struct CameraPreviewView: UIViewRepresentable {
     let session: AVCaptureSession
     
-    func makeUIView(context: Context) -> UIView {
-        let view: UIView = UIView()
-        view.backgroundColor = UIColor.black
-        
-        let previewLayer = AVCaptureVideoPreviewLayer(session: session)
-        previewLayer.videoGravity = .resizeAspectFill
-        previewLayer.backgroundColor = UIColor.black.cgColor
-        
-        view.layer.addSublayer(previewLayer)
-        
-        return view
+    func makeUIView(context: Context) -> PreviewContainerView {
+        PreviewContainerView(session: session)
     }
     
-    func updateUIView(_ uiView: UIView, context: Context) {
-        DispatchQueue.main.async {
-            if let previewLayer = uiView.layer.sublayers?.first as? AVCaptureVideoPreviewLayer {
-                previewLayer.frame = uiView.bounds
-            }
-        }
+    func updateUIView(_ uiView: PreviewContainerView, context: Context) {
+        uiView.updateSessionIfNeeded(session)
     }
-} 
+}
+
+final class PreviewContainerView: UIView {
+    private let previewLayer: AVCaptureVideoPreviewLayer
+    private weak var currentSession: AVCaptureSession?
+    
+    init(session: AVCaptureSession) {
+        self.previewLayer = AVCaptureVideoPreviewLayer(session: session)
+        self.currentSession = session
+        super.init(frame: .zero)
+        backgroundColor = .black
+        previewLayer.videoGravity = .resizeAspectFill
+        previewLayer.backgroundColor = UIColor.black.cgColor
+        layer.addSublayer(previewLayer)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        previewLayer.frame = bounds
+    }
+    
+    func updateSessionIfNeeded(_ session: AVCaptureSession) {
+        guard currentSession !== session else { return }
+        previewLayer.session = session
+        currentSession = session
+    }
+}
