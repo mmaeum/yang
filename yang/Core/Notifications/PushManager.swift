@@ -67,8 +67,8 @@ final class PushManager: ObservableObject {
             components.second = 0
             
             let content = UNMutableNotificationContent()
-            content.title = "오늘의 순간을 남겨보세요"
-            content.body = "하루가 지나 새로운 영상을 찍을 수 있어요"
+            content.title = "Capture today's moment"
+            content.body = "A new day has arrived, you can record a new video"
             content.sound = .default
             content.categoryIdentifier = "star.reminder"
             
