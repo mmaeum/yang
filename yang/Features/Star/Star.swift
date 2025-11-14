@@ -1,8 +1,13 @@
 import Foundation
 import SceneKit
 import Photos
+import AVFoundation
 
 struct Star: Identifiable {
+    enum VideoFetchError: Error {
+        case assetUnavailable
+    }
+    
     let id: String
     let asset: PHAsset
     let position: SCNVector3
@@ -30,15 +35,44 @@ struct Star: Identifiable {
         return Float(1.0 - (exponentialDecay * 0.9))
     }
     
-    func getVideoURL(completion: @escaping (URL?) -> Void) {
+    /// `getVideoURL`: PHAsset에서 AVPlayer용 비디오 URL을 비동기로 가져오며,
+    /// iCloud 다운로드 진행률과 오류를 함께 전달한다.
+    func getVideoURL(progress: ((Double) -> Void)? = nil,
+                     completion: @escaping (Result<URL, Error>) -> Void) {
         let options = PHVideoRequestOptions()
         options.version = .current
+        options.deliveryMode = .highQualityFormat
+        options.isNetworkAccessAllowed = true
+        options.progressHandler = { pct, _, _, _ in
+            DispatchQueue.main.async {
+                progress?(pct)
+            }
+        }
         
-        PHImageManager.default().requestAVAsset(forVideo: asset, options: options) { asset, _, _ in
-            if let urlAsset = asset as? AVURLAsset {
-                completion(urlAsset.url)
-            } else {
-                completion(nil)
+        PHImageManager.default().requestAVAsset(forVideo: asset, options: options) { asset, _, info in
+            if let error = info?[PHImageErrorKey] as? Error {
+                DispatchQueue.main.async {
+                    completion(.failure(error))
+                }
+                return
+            }
+            
+            if let cancelled = info?[PHImageCancelledKey] as? Bool, cancelled {
+                DispatchQueue.main.async {
+                    completion(.failure(VideoFetchError.assetUnavailable))
+                }
+                return
+            }
+            
+            guard let urlAsset = asset as? AVURLAsset else {
+                DispatchQueue.main.async {
+                    completion(.failure(VideoFetchError.assetUnavailable))
+                }
+                return
+            }
+            
+            DispatchQueue.main.async {
+                completion(.success(urlAsset.url))
             }
         }
     }
