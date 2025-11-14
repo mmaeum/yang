@@ -19,17 +19,21 @@ class AppState: ObservableObject {
 @main
 struct yangApp: App {
     @StateObject private var appState = AppState()
+    @StateObject private var pushManager = PushManager.shared
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
+                .environmentObject(pushManager)
         }
     }
 }
 
 struct RootView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var pushManager: PushManager
     
     var body: some View {
         ZStack {
@@ -57,7 +61,7 @@ struct RootView: View {
                 .opacity(appState.showContents && appState.hasTodayVideo ? 1 : 0)
                 .animation(.easeInOut(duration: 1.5), value: appState.showContents && appState.hasTodayVideo)
                 
-                VideoRecordingView(onVideoSaved: {
+                VideoRecordingView(pushManager: pushManager, onVideoSaved: {
                     appState.hasTodayVideo = true
                 })
                 .opacity(appState.showContents && appState.hasTodayVideo ? 0 : 1)

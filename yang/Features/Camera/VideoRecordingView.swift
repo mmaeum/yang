@@ -1,14 +1,17 @@
 import SwiftUI
 import AVFoundation
-import UIKit
 import Photos
 
 struct VideoRecordingView: View {
-    @StateObject private var viewModel = VideoRecordingViewModel()
+    @StateObject private var viewModel: VideoRecordingViewModel
+    @ObservedObject private var pushManager: PushManager
     @Environment(\.presentationMode) var presentationMode
     let onVideoSaved: (() -> Void)?
+    @State private var isRequestingPushPermission = false
     
-    init(onVideoSaved: (() -> Void)? = nil) {
+    init(pushManager: PushManager = .shared, onVideoSaved: (() -> Void)? = nil) {
+        self.pushManager = pushManager
+        _viewModel = StateObject(wrappedValue: VideoRecordingViewModel(pushManager: pushManager))
         self.onVideoSaved = onVideoSaved
     }
     
@@ -28,7 +31,9 @@ struct VideoRecordingView: View {
                         viewModel.startRecording()
                     }
                 }
-                .padding(.bottom, 60)
+                .padding(.bottom, 24)
+                
+                notificationPermissionBanner
             }
         }
         .onAppear {
@@ -37,6 +42,36 @@ struct VideoRecordingView: View {
                 presentationMode.wrappedValue.dismiss()
             }
             viewModel.onVideoSaved = onVideoSaved
+        }
+    }
+}
+ 
+private extension VideoRecordingView {
+    @ViewBuilder
+    var notificationPermissionBanner: some View {
+        if pushManager.authorizationStatus == .notDetermined {
+            PermissionCTAView(
+                title: "알림을 허용하면 영상 기록 알림을 받을 수 있어요.",
+                buttonTitle: isRequestingPushPermission ? "요청 중..." : "알림 허용",
+                action: requestPushPermission
+            )
+            .padding(.horizontal, 24)
+            .padding(.bottom, 36)
+            .disabled(isRequestingPushPermission)
+            .opacity(isRequestingPushPermission ? 0.6 : 1.0)
+        } else {
+            EmptyView()
+        }
+    }
+    
+    func requestPushPermission() {
+        guard !isRequestingPushPermission else { return }
+        isRequestingPushPermission = true
+        Task {
+            _ = await pushManager.requestAuthorization()
+            await MainActor.run {
+                isRequestingPushPermission = false
+            }
         }
     }
 }
@@ -165,6 +200,40 @@ struct RecordingActiveView: View {
                 }
             }
         }
+    }
+}
+
+struct PermissionCTAView: View {
+    let title: String
+    let buttonTitle: String
+    let action: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            Text(title)
+                .font(.system(size: 13, weight: .regular, design: .monospaced))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+            
+            Button(action: action) {
+                Text(buttonTitle)
+                    .font(.system(size: 15, weight: .semibold, design: .monospaced))
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color.white)
+                    .cornerRadius(12)
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity)
+        .background(Color.black.opacity(0.6))
+        .cornerRadius(20)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+        )
     }
 }
 

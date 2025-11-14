@@ -14,10 +14,12 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
     private var startTime: CMTime?
     private let sessionQueue = DispatchQueue(label: "com.mmaeum.yang.camera.session", qos: .userInitiated)
     private let sessionQueueKey = DispatchSpecificKey<Void>()
+    private let pushManager: PushManager
     var onDismiss: (() -> Void)?
     var onVideoSaved: (() -> Void)?
     
-    override init() {
+    init(pushManager: PushManager = .shared) {
+        self.pushManager = pushManager
         super.init()
         sessionQueue.setSpecific(key: sessionQueueKey, value: ())
         setupNotifications()
@@ -329,16 +331,7 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
             }) { success, error in
                 DispatchQueue.main.async {
                     if success {
-                        print("Video saved to yang album successfully")
-                        // 임시 파일 삭제
-                        try? FileManager.default.removeItem(at: videoURL)
-                        // 카메라 세션 종료
-                        self?.sessionQueue.async { [weak self] in
-                            self?.stopSessionIfNeeded()
-                        }
-                        // 화면 닫기
-                        self?.onDismiss?()
-                        self?.onVideoSaved?()
+                        self?.handleSuccessfulVideoSave(videoURL: videoURL)
                     } else {
                         print("Failed to save video to yang album: \(error?.localizedDescription ?? "Unknown error")")
                         // 실패해도 카메라 세션 종료
@@ -400,5 +393,24 @@ extension VideoRecordingViewModel: AVCaptureVideoDataOutputSampleBufferDelegate 
         }
         
         filteredRecorder?.recordFrame(sampleBuffer: sampleBuffer, at: presentationTime)
+    }
+}
+
+private extension VideoRecordingViewModel {
+    func handleSuccessfulVideoSave(videoURL: URL) {
+        print("Video saved to yang album successfully")
+        try? FileManager.default.removeItem(at: videoURL)
+        sessionQueue.async { [weak self] in
+            self?.stopSessionIfNeeded()
+        }
+        onDismiss?()
+        onVideoSaved?()
+        scheduleStarReminderChain()
+    }
+    
+    func scheduleStarReminderChain() {
+        Task {
+            await pushManager.scheduleStarReminders(startingFrom: Date())
+        }
     }
 }
