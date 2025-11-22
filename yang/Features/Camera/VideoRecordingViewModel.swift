@@ -332,6 +332,7 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
                 DispatchQueue.main.async {
                     if success {
                         print("✅ VideoRecordingViewModel: Video saved to yang album successfully")
+                        self?.handleSuccessfulVideoSave(videoURL: videoURL)
                         // 임시 파일 삭제
                         try? FileManager.default.removeItem(at: videoURL)
                         // 카메라 세션 종료

@@ -168,8 +168,8 @@ struct ContentView: View {
                 let seed = UInt64(abs(asset.localIdentifier.hash))
                 var random = SeededRandomNumberGenerator(seed: seed)
 
-                // 최신 비디오일수록 중앙에 가깝게 위치, 하지만 최소 거리는 3.0으로 설정
-                let distance = Float(index) * 2.0 + 3.0
+                // 최신 비디오일수록 중앙에 가깝게 위치
+                let distance = Float(index) * 2.0
                 let angle = Float.random(in: 0...(2 * .pi), using: &random)
 
                 let position = SCNVector3(
