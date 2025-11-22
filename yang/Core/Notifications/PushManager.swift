@@ -10,7 +10,7 @@ final class PushManager: ObservableObject {
     
     private let notificationCenter: UNUserNotificationCenter
     private let identifierPrefix = "starReminder-"
-    private let reminderCount = 3
+    private let reminderCount = 1
     private let reminderHour = 14
     private let reminderMinute = 0
     
@@ -51,7 +51,9 @@ final class PushManager: ObservableObject {
         
         removeStarReminders()
         
-        let calendar = Calendar.current
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Asia/Seoul") ?? .current
+        
         for index in 1...reminderCount {
             guard let baseDate = calendar.date(byAdding: .day, value: index, to: completionDate),
                   let fireDate = calendar.date(
@@ -59,11 +61,13 @@ final class PushManager: ObservableObject {
                     minute: reminderMinute,
                     second: 0,
                     of: baseDate
-                  ) else {
+                  ),
+                  fireDate > Date() else {
                 continue
             }
             
             var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: fireDate)
+            components.timeZone = TimeZone(identifier: "Asia/Seoul")
             components.second = 0
             
             let content = UNMutableNotificationContent()
@@ -87,7 +91,7 @@ final class PushManager: ObservableObject {
     }
     
     func removeStarReminders() {
-        let identifiers = (1...reminderCount).map { "\(identifierPrefix)\($0)" }
+        let identifiers = (1...3).map { "\(identifierPrefix)\($0)" }
         notificationCenter.removePendingNotificationRequests(withIdentifiers: identifiers)
         notificationCenter.removeDeliveredNotifications(withIdentifiers: identifiers)
     }
