@@ -333,26 +333,9 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
                     if success {
                         print("✅ VideoRecordingViewModel: Video saved to yang album successfully")
                         self?.handleSuccessfulVideoSave(videoURL: videoURL)
-                        // 임시 파일 삭제
-                        try? FileManager.default.removeItem(at: videoURL)
-                        // 카메라 세션 종료
-                        self?.sessionQueue.async { [weak self] in
-                            self?.stopSessionIfNeeded()
-                        }
-                        // 화면 닫기 및 콜백 호출
-                        print("🚪 VideoRecordingViewModel: Calling onDismiss and onVideoSaved")
-                        self?.onDismiss?()
-                        self?.onVideoSaved?()
-                        print("📞 VideoRecordingViewModel: Callbacks called")
                     } else {
-                        print("Failed to save video to yang album: \(error?.localizedDescription ?? "Unknown error")")
-                        // 실패해도 카메라 세션 종료
-                        self?.sessionQueue.async { [weak self] in
-                            self?.stopSessionIfNeeded()
-                        }
-                        // 실패해도 화면 닫기
-                        self?.onDismiss?()
-                        self?.onVideoSaved?()
+                        print("❌ VideoRecordingViewModel: Failed to save video - \(error?.localizedDescription ?? "Unknown error")")
+                        self?.handleFailedVideoSave(videoURL: videoURL)
                     }
                 }
             }
@@ -410,16 +393,38 @@ extension VideoRecordingViewModel: AVCaptureVideoDataOutputSampleBufferDelegate 
 
 private extension VideoRecordingViewModel {
     func handleSuccessfulVideoSave(videoURL: URL) {
-        print("Video saved to yang album successfully")
+        // 임시 파일 삭제
         try? FileManager.default.removeItem(at: videoURL)
+
+        // 카메라 세션 종료
         sessionQueue.async { [weak self] in
             self?.stopSessionIfNeeded()
         }
+
+        // 화면 닫기 및 콜백 호출
+        print("🚪 VideoRecordingViewModel: Calling onDismiss and onVideoSaved")
         onDismiss?()
         onVideoSaved?()
+        print("📞 VideoRecordingViewModel: Callbacks called")
+
+        // 알림 스케줄링
         scheduleStarReminderChain()
     }
-    
+
+    func handleFailedVideoSave(videoURL: URL) {
+        // 실패해도 임시 파일 삭제
+        try? FileManager.default.removeItem(at: videoURL)
+
+        // 카메라 세션 종료
+        sessionQueue.async { [weak self] in
+            self?.stopSessionIfNeeded()
+        }
+
+        // 실패해도 화면 닫기
+        onDismiss?()
+        onVideoSaved?()
+    }
+
     func scheduleStarReminderChain() {
         Task {
             await pushManager.scheduleStarReminders(startingFrom: Date())
