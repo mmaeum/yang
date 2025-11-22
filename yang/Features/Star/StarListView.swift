@@ -6,6 +6,7 @@ import UIKit
 struct StarListView: UIViewRepresentable {
     let scene: SCNScene
     @Binding var stars: [Star]
+    let forceRefresh: Bool
     @State private var isTransitioning = false
 
     func makeUIView(context: Context) -> SCNView {
@@ -58,13 +59,52 @@ struct StarListView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: SCNView, context: Context) {
-        // 씬에 아직 없는 Star 노드만 추가
-        for star in stars {
-            if scene.rootNode.childNode(withName: star.id, recursively: false) == nil {
-                let node = createStarNode(for: star)
-                scene.rootNode.addChildNode(node)
+        print("🌟 StarListView: updateUIView called with \(stars.count) stars, forceRefresh=\(forceRefresh)")
+
+        // 현재 scene에 있는 star 노드 수 확인
+        let existingStarNodes = scene.rootNode.childNodes.filter { node in
+            if let name = node.name, !name.isEmpty {
+                // 카메라나 조명이 아닌 star 노드만 카운트
+                return node.camera == nil && node.light == nil
             }
+            return false
         }
+        print("🔍 StarListView: Current star nodes in scene: \(existingStarNodes.count)")
+
+        // stars 배열의 ID 수집
+        let starIds = stars.map { $0.id }
+        print("📋 StarListView: Stars array IDs: \(starIds.map { $0.prefix(8) })")
+
+        // scene에 있는 노드 ID 수집
+        let nodeIds = existingStarNodes.compactMap { $0.name }
+        print("📋 StarListView: Node IDs in scene: \(nodeIds.map { $0.prefix(8) })")
+
+        // 모든 star 노드를 제거하고 다시 추가 
+        print("🗑️ StarListView: Removing all star nodes from scene")
+        existingStarNodes.forEach { $0.removeFromParentNode() }
+
+        // 모든 star를 새로 추가
+        print("➕ StarListView: Adding all \(stars.count) stars to scene")
+        for star in stars {
+            let node = createStarNode(for: star)
+            scene.rootNode.addChildNode(node)
+            print("  ⭐ Added star: \(star.id.prefix(8))... at position \(star.position), brightness: \(star.brightness), createdAt: \(star.createdAt)")
+        }
+
+        let finalStarNodes = scene.rootNode.childNodes.filter { node in
+            if let name = node.name, !name.isEmpty {
+                return node.camera == nil && node.light == nil
+            }
+            return false
+        }
+        print("✅ StarListView: Scene now has \(finalStarNodes.count) star nodes")
+    }
+
+    private func arePositionsEqual(_ pos1: SCNVector3, _ pos2: SCNVector3) -> Bool {
+        let epsilon: Float = 0.0001
+        return abs(pos1.x - pos2.x) < epsilon &&
+               abs(pos1.y - pos2.y) < epsilon &&
+               abs(pos1.z - pos2.z) < epsilon
     }
     
     private func makeRadialGradient(diameter: CGFloat) -> UIImage {

@@ -14,6 +14,7 @@ class AppState: ObservableObject {
     @Published var hasTodayVideo = false
     @Published var isCheckingPhotos = true
     @Published var showContents = false
+    @Published var shouldRefreshStars = false
 }
 
 @main
@@ -58,11 +59,16 @@ struct RootView: View {
 
             if appState.showContents {
                 ContentView()
+                .id(appState.shouldRefreshStars) // 비디오 저장 후 ContentView 완전히 재생성
                 .opacity(appState.showContents && appState.hasTodayVideo ? 1 : 0)
                 .animation(.easeInOut(duration: 1.5), value: appState.showContents && appState.hasTodayVideo)
                 
                 VideoRecordingView(pushManager: pushManager, onVideoSaved: {
+                    print("🎬 yangApp: onVideoSaved callback triggered")
                     appState.hasTodayVideo = true
+                    print("🔄 yangApp: Toggling shouldRefreshStars from \(appState.shouldRefreshStars)")
+                    appState.shouldRefreshStars.toggle()
+                    print("✅ yangApp: shouldRefreshStars toggled to \(appState.shouldRefreshStars)")
                 })
                 .opacity(appState.showContents && appState.hasTodayVideo ? 0 : 1)
                 .animation(.easeInOut(duration: 0.5), value: appState.showContents && !appState.hasTodayVideo)

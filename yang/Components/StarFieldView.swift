@@ -7,6 +7,7 @@ struct StarFieldView: View {
     let isLoading: Bool
     let width: CGFloat
     let height: CGFloat
+    let forceRefresh: Bool
 
     var body: some View {
         ZStack {
@@ -27,7 +28,7 @@ struct StarFieldView: View {
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     .scaleEffect(1.5)
             } else {
-                StarListView(scene: scene, stars: $stars)
+                StarListView(scene: scene, stars: $stars, forceRefresh: forceRefresh)
                     .frame(width: width, height: height)
             }
         }
@@ -40,7 +41,8 @@ struct StarFieldView: View {
         stars: .constant([]),
         isLoading: true,
         width: 300,
-        height: 400
+        height: 400,
+        forceRefresh: false
     )
     .background(.black)
 }

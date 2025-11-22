@@ -2,6 +2,17 @@ import SwiftUI
 import SceneKit
 import Photos
 
+class PhotoLibraryObserver: NSObject, PHPhotoLibraryChangeObserver {
+    var onChange: (() -> Void)?
+
+    func photoLibraryDidChange(_ changeInstance: PHChange) {
+        print("📸 PhotoLibraryObserver: Photo library changed")
+        DispatchQueue.main.async {
+            self.onChange?()
+        }
+    }
+}
+
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @State private var stars: [Star] = []
@@ -10,6 +21,8 @@ struct ContentView: View {
     @State private var showCredits = false
     @State private var countdownStartOfDay = Calendar.current.startOfDay(for: Date())
     @State private var countdownTimer: Timer?
+    @State private var forceRefresh = false
+    @State private var photoObserver = PhotoLibraryObserver()
     
     private let scene: SCNScene = {
         let scene = SCNScene()
@@ -32,7 +45,8 @@ struct ContentView: View {
                     stars: $stars,
                     isLoading: isLoading,
                     width: geometry.size.width,
-                    height: geometry.size.height
+                    height: geometry.size.height,
+                    forceRefresh: forceRefresh
                 )
                 .frame(width: geometry.size.width, height: geometry.size.height)
                 // 햄버거 버튼 + 타이틀 영역
@@ -76,16 +90,32 @@ struct ContentView: View {
             countdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
                 updateTimeLeft()
             }
+
+            // PHPhotoLibrary 변경 감지 observer 등록
+            photoObserver.onChange = {
+                print("🔄 ContentView: Photo library changed, reloading videos")
+                loadVideos()
+                forceRefresh.toggle()
+            }
+            PHPhotoLibrary.shared().register(photoObserver)
         }
         .onDisappear {
             countdownTimer?.invalidate()
             countdownTimer = nil
+
+            // Observer 해제
+            PHPhotoLibrary.shared().unregisterChangeObserver(photoObserver)
+        }
+        .onChange(of: appState.hasTodayVideo) { hasVideo in
+            print("📺 ContentView: hasTodayVideo changed to \(hasVideo)")
+            // observer가 자동으로 사진 라이브러리 변경사항을 감지하므로 수동 로드 불필요
         }
     }
     
     private func loadVideos() {
+        print("🔄 ContentView: loadVideos() called")
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-        
+
         switch status {
         case .authorized, .limited:
             loadVideosFromAlbum()
@@ -105,54 +135,59 @@ struct ContentView: View {
     }
     
     private func loadVideosFromAlbum() {
+        print("📚 ContentView: loadVideosFromAlbum() called")
         let fetchOptions = PHFetchOptions()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        
+
         // yang 앨범 찾기
         let collections = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
         var yangAlbum: PHAssetCollection?
-        
+
         collections.enumerateObjects { collection, _, _ in
             if collection.localizedTitle == "yang" {
                 yangAlbum = collection
             }
         }
-        
+
         guard let album = yangAlbum else {
+            print("⚠️ ContentView: yang album not found")
             DispatchQueue.main.async {
                 isLoading = false
             }
             return
         }
-        
+
         // 비디오 에셋 가져오기
         let assets = PHAsset.fetchAssets(in: album, options: fetchOptions)
+        print("📹 ContentView: Found \(assets.count) assets in yang album")
         var newStars: [Star] = []
-        
+
         assets.enumerateObjects { asset, index, stop in
             if asset.mediaType == .video {
                 // 비디오의 고유 식별자를 시드값으로 사용
                 let seed = UInt64(abs(asset.localIdentifier.hash))
                 var random = SeededRandomNumberGenerator(seed: seed)
-                
-                // 최신 비디오일수록 중앙에 가깝게 위치
-                let distance = Float(index) * 2.0
+
+                // 최신 비디오일수록 중앙에 가깝게 위치, 하지만 최소 거리는 3.0으로 설정
+                let distance = Float(index) * 2.0 + 3.0
                 let angle = Float.random(in: 0...(2 * .pi), using: &random)
-                
+
                 let position = SCNVector3(
                     distance * cos(angle),
                     distance * sin(angle),
                     Float.random(in: -5...5, using: &random)
                 )
-                
+
                 let star = Star(asset: asset, position: position)
                 newStars.append(star)
             }
         }
-        
+
+        print("⭐ ContentView: Created \(newStars.count) stars")
         DispatchQueue.main.async {
-            stars = newStars
-            isLoading = false
+            self.stars = newStars
+            self.isLoading = false
+            print("✅ ContentView: Stars updated in main thread, total stars: \(self.stars.count)")
         }
     }
     

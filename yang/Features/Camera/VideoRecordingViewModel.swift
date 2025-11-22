@@ -325,13 +325,24 @@ class VideoRecordingViewModel: NSObject, ObservableObject {
             PHPhotoLibrary.shared().performChanges({
                 let assetRequest = PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: videoURL)
                 guard let assetPlaceholder = assetRequest?.placeholderForCreatedAsset else { return }
-                
+
                 let albumChangeRequest = PHAssetCollectionChangeRequest(for: album)
                 albumChangeRequest?.addAssets([assetPlaceholder] as NSArray)
             }) { success, error in
                 DispatchQueue.main.async {
                     if success {
-                        self?.handleSuccessfulVideoSave(videoURL: videoURL)
+                        print("✅ VideoRecordingViewModel: Video saved to yang album successfully")
+                        // 임시 파일 삭제
+                        try? FileManager.default.removeItem(at: videoURL)
+                        // 카메라 세션 종료
+                        self?.sessionQueue.async { [weak self] in
+                            self?.stopSessionIfNeeded()
+                        }
+                        // 화면 닫기 및 콜백 호출
+                        print("🚪 VideoRecordingViewModel: Calling onDismiss and onVideoSaved")
+                        self?.onDismiss?()
+                        self?.onVideoSaved?()
+                        print("📞 VideoRecordingViewModel: Callbacks called")
                     } else {
                         print("Failed to save video to yang album: \(error?.localizedDescription ?? "Unknown error")")
                         // 실패해도 카메라 세션 종료
