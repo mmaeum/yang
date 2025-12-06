@@ -265,7 +265,7 @@ struct StarListView: UIViewRepresentable {
             self.transitionDelegate = ZoomTransitionDelegate(originFrame: originFrame)
 
             // StarInfoView 풀스크린 모달로 표시
-            let infoView = StarInfoView(star: star)
+            let infoView = StarInfoView(stars: stars, initialStarId: star.id)
             let vc = UIHostingController(rootView: infoView)
             vc.modalPresentationStyle = .fullScreen
             vc.transitioningDelegate = self.transitionDelegate

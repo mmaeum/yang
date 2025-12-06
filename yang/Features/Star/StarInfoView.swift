@@ -29,27 +29,23 @@ struct FullScreenVideoPlayer: UIViewControllerRepresentable {
         controller.showsPlaybackControls = false  // 기본 컨트롤 숨기기
         controller.videoGravity = .resizeAspectFill
 
-        // 루프 재생을 위한 알림 설정
-        NotificationCenter.default.addObserver(
-            forName: .AVPlayerItemDidPlayToEndTime,
-            object: player.currentItem,
-            queue: .main
-        ) { _ in
-            player.seek(to: .zero)
-            if isPlaying {
-                player.play()
-            }
-        }
-
         return controller
     }
 
-    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
+        uiViewController.player = player
+    }
+
+    static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: ()) {
+        uiViewController.player = nil
+    }
 }
 
 struct StarInfoView: View {
-    let star: Star
+    let stars: [Star]
+    let initialStarId: String
     @Environment(\.presentationMode) var presentationMode
+    @State private var currentIndex: Int = 0
     @State private var player: AVPlayer?
     @State private var isLoading = true
     @State private var isTransitioning = false
@@ -59,6 +55,16 @@ struct StarInfoView: View {
     @State private var downloadProgress: Double = 0
     @State private var errorMessage: String?
     @State private var playbackObserver: NSObjectProtocol?
+    @State private var dragOffset: CGFloat = 0
+    @State private var videoRequestID: PHImageRequestID?
+
+    private var sortedStars: [Star] {
+        stars.sorted { $0.createdAt > $1.createdAt }
+    }
+
+    private var currentStar: Star {
+        sortedStars[currentIndex]
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -86,6 +92,16 @@ struct StarInfoView: View {
                         .onTapGesture {
                             togglePlayback()
                         }
+                        .offset(y: dragOffset)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    dragOffset = value.translation.height
+                                }
+                                .onEnded { value in
+                                    handleSwipe(translation: value.translation.height)
+                                }
+                        )
                 } else if let errorMessage = errorMessage {
                     Color.black
                         .ignoresSafeArea()
@@ -134,7 +150,7 @@ struct StarInfoView: View {
                         .opacity(0.8)
 
                         Spacer()
-                        Text(star.createdAt, format: .dateTime.year().month().day())
+                        Text(currentStar.createdAt, format: .dateTime.year().month().day())
                             .font(Font.custom("Press Start 2P", size: 12))
                             .foregroundColor(.white)
                             .shadow(color: Color(red: 0.00, green: 0.00, blue: 0.00, opacity: 0.16), radius: 20, x: 0, y: 0)
@@ -179,10 +195,21 @@ struct StarInfoView: View {
             }
         }
         .onAppear {
+            if let index = sortedStars.firstIndex(where: { $0.id == initialStarId }) {
+                currentIndex = index
+            }
             loadVideo()
         }
         .onDisappear {
+            // 진행 중인 요청 취소
+            if let requestID = videoRequestID {
+                PHImageManager.default().cancelImageRequest(requestID)
+                videoRequestID = nil
+            }
             cleanupPlayer()
+        }
+        .onChange(of: currentIndex) { _ in
+            loadVideo()
         }
         .sheet(isPresented: $isSharePresented) {
             if let url = videoURL {
@@ -193,23 +220,36 @@ struct StarInfoView: View {
     
     /// `loadVideo`: iCloud 다운로드 진행률을 초기화하고 비디오 URL 요청을 시작한다.
     private func loadVideo() {
+        // 이전 요청 취소
+        if let requestID = videoRequestID {
+            PHImageManager.default().cancelImageRequest(requestID)
+            videoRequestID = nil
+        }
+
         cleanupPlayer()
         isPlaying = true
         errorMessage = nil
         downloadProgress = 0
         isLoading = true
-        
-        star.getVideoURL(progress: { progress in
-            downloadProgress = min(max(progress, 0), 1)
-        }) { result in
-            switch result {
-            case .success(let url):
-                self.videoURL = url
-                setupPlayer(with: url)
-            case .failure(let error):
-                handleLoadFailure(error)
+        videoURL = nil
+
+        let newRequestID = currentStar.getVideoURL(progress: { [self] progress in
+            DispatchQueue.main.async {
+                self.downloadProgress = min(max(progress, 0), 1)
+            }
+        }) { [self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let url):
+                    self.videoURL = url
+                    self.setupPlayer(with: url)
+                case .failure(let error):
+                    self.handleLoadFailure(error)
+                }
             }
         }
+
+        videoRequestID = newRequestID
     }
     
     /// `setupPlayer`: 가져온 URL로 AVPlayer를 구성하고 루프 재생 옵저버를 등록한다.
@@ -247,12 +287,21 @@ struct StarInfoView: View {
     
     /// `cleanupPlayer`: 플레이어와 Notification 옵저버를 안전하게 해제한다.
     private func cleanupPlayer() {
+        // Notification observer 제거
         if let observer = playbackObserver {
             NotificationCenter.default.removeObserver(observer)
             playbackObserver = nil
         }
-        player?.pause()
-        player = nil
+
+        // Player 정리
+        if let currentPlayer = player {
+            currentPlayer.pause()
+            currentPlayer.replaceCurrentItem(with: nil)
+            player = nil
+        }
+
+        // 비디오 URL 정리
+        videoURL = nil
     }
 
     /// `togglePlayback`: 탭 입력에 따라 재생/일시정지를 전환한다.
@@ -265,5 +314,26 @@ struct StarInfoView: View {
             player.play()
         }
         isPlaying.toggle()
+    }
+
+    /// `handleSwipe`: 스와이프 제스처를 처리하여 다음/이전 비디오로 이동한다.
+    private func handleSwipe(translation: CGFloat) {
+        let threshold: CGFloat = 50
+
+        if translation < -threshold {
+            // 위로 스와이프: 더 오래된 동영상 (인덱스 증가)
+            if currentIndex < sortedStars.count - 1 {
+                currentIndex += 1
+            }
+        } else if translation > threshold {
+            // 아래로 스와이프: 더 최근 동영상 (인덱스 감소)
+            if currentIndex > 0 {
+                currentIndex -= 1
+            }
+        }
+
+        withAnimation(.easeInOut(duration: 0.3)) {
+            dragOffset = 0
+        }
     }
 }
