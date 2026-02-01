@@ -1,0 +1,7 @@
+{
+  "swift.swiftSDK": "arm64-apple-ios",
+  "swift.path": "/Library/Developer/CommandLineTools/usr/bin",
+  "swift.swiftEnvironmentVariables": {
+    "DEVELOPER_DIR": "/Applications/Xcode.app/Contents/Developer"
+  }
+}

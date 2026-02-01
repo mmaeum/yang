@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		60A10F892E116EFA00B3AAEF /* launch_animation.riv in Resources */ = {isa = PBXBuildFile; fileRef = 60A10F882E116EFA00B3AAEF /* launch_animation.riv */; };
+		60A10F8D2E116F4E00B3AAEF /* RiveRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 60A10F8C2E116F4E00B3AAEF /* RiveRuntime */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		60409F822DD9BC9F0080B071 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,11 +32,25 @@
 		60409F742DD9BC9C0080B071 /* yang.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = yang.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		60409F812DD9BC9F0080B071 /* yangTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = yangTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		60409F8B2DD9BC9F0080B071 /* yangUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = yangUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		60A10F882E116EFA00B3AAEF /* launch_animation.riv */ = {isa = PBXFileReference; lastKnownFileType = file; path = launch_animation.riv; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		60C56E072DE358B800CDAE90 /* Exceptions for "yang" folder in "yang" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 60409F732DD9BC9C0080B071 /* yang */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		60409F762DD9BC9C0080B071 /* yang */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				60C56E072DE358B800CDAE90 /* Exceptions for "yang" folder in "yang" target */,
+			);
 			path = yang;
 			sourceTree = "<group>";
 		};
@@ -52,6 +71,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				60A10F8D2E116F4E00B3AAEF /* RiveRuntime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -75,9 +95,11 @@
 		60409F6B2DD9BC9C0080B071 = {
 			isa = PBXGroup;
 			children = (
+				60A10F882E116EFA00B3AAEF /* launch_animation.riv */,
 				60409F762DD9BC9C0080B071 /* yang */,
 				60409F842DD9BC9F0080B071 /* yangTests */,
 				60409F8E2DD9BC9F0080B071 /* yangUITests */,
+				60A10F8B2E116F4E00B3AAEF /* Frameworks */,
 				60409F752DD9BC9C0080B071 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +112,13 @@
 				60409F8B2DD9BC9F0080B071 /* yangUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		60A10F8B2E116F4E00B3AAEF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,6 +141,7 @@
 			);
 			name = yang;
 			packageProductDependencies = (
+				60A10F8C2E116F4E00B3AAEF /* RiveRuntime */,
 			);
 			productName = yang;
 			productReference = 60409F742DD9BC9C0080B071 /* yang.app */;
@@ -171,7 +201,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1630;
-				LastUpgradeCheck = 1630;
+				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					60409F732DD9BC9C0080B071 = {
 						CreatedOnToolsVersion = 16.3;
@@ -195,6 +225,9 @@
 			);
 			mainGroup = 60409F6B2DD9BC9C0080B071;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				60A10F8A2E116F1000B3AAEF /* XCRemoteSwiftPackageReference "rive-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 60409F752DD9BC9C0080B071 /* Products */;
 			projectDirPath = "";
@@ -212,6 +245,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				60A10F892E116EFA00B3AAEF /* launch_animation.riv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -327,6 +361,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -383,6 +418,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -394,9 +430,15 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
+				DEVELOPMENT_TEAM = 64V85RUAG5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = yang/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
+				INFOPLIST_KEY_NSCameraUsageDescription = "오늘의 기억을 사진으로 남기고 보관하려면 카메라 권한이 필요합니다.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "영상에 소리를 함께 담아 추억을 기록하기 위해 마이크 접근이 필요합니다";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "기록한 사진을 앨범에 저장하고 불러오기 위해 사진 접근 권한이 필요합니다";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -406,12 +448,16 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.20;
 				PRODUCT_BUNDLE_IDENTIFIER = maeum.yang;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -421,9 +467,15 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
+				DEVELOPMENT_TEAM = 64V85RUAG5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = yang/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
+				INFOPLIST_KEY_NSCameraUsageDescription = "오늘의 기억을 사진으로 남기고 보관하려면 카메라 권한이 필요합니다.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "영상에 소리를 함께 담아 추억을 기록하기 위해 마이크 접근이 필요합니다";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "기록한 사진을 앨범에 저장하고 불러오기 위해 사진 접근 권한이 필요합니다";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -433,12 +485,16 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.20;
 				PRODUCT_BUNDLE_IDENTIFIER = maeum.yang;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -550,6 +606,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		60A10F8A2E116F1000B3AAEF /* XCRemoteSwiftPackageReference "rive-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/rive-app/rive-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.9.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		60A10F8C2E116F4E00B3AAEF /* RiveRuntime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 60A10F8A2E116F1000B3AAEF /* XCRemoteSwiftPackageReference "rive-ios" */;
+			productName = RiveRuntime;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 60409F6C2DD9BC9C0080B071 /* Project object */;
 }
